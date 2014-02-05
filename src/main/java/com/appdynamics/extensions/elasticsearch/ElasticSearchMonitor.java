@@ -132,13 +132,16 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 	private void populateIndexStats(String jsonString) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			JsonNode indicesRootNode = mapper.readValue(jsonString.getBytes(), JsonNode.class).path("indices");
+            JsonNode indicesRootNode = mapper.readValue(jsonString.getBytes(), JsonNode.class).path("indices");
+            if(indicesRootNode != null && indicesRootNode.size() <= 0) {
+                indicesRootNode = mapper.readValue(jsonString.getBytes(), JsonNode.class).path("_all").path("indices"); 
+            }
 			Iterator<String> nodes = indicesRootNode.fieldNames();
 			while (nodes.hasNext()) {
 				String indexName = nodes.next();
 				JsonNode node = indicesRootNode.path(indexName);
-				int primarySize = convertBytesToMB(node.path("primaries").path("store").path("size_in_bytes").asInt());
-				int size = convertBytesToMB(node.path("total").path("store").path("size_in_bytes").asInt());
+				int primarySize = convertBytesToKB(node.path("primaries").path("store").path("size_in_bytes").asInt());
+				int size = convertBytesToKB(node.path("total").path("store").path("size_in_bytes").asInt());
 				int num_docs = node.path("primaries").path("docs").path("count").asInt();
 
 				String indexMetricPath = "Indices|" + indexName + "|";
@@ -174,15 +177,15 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 				JsonNode node = nodesRootNode.path(nodes.next());
 				String nodeName = node.path("name").asText();
 
-				int indicesSize = convertBytesToMB(node.path("indices").path("store").path("size_in_bytes").asInt());
+				int indicesSize = convertBytesToKB(node.path("indices").path("store").path("size_in_bytes").asInt());
 				int num_docs = node.path("indices").path("docs").path("count").asInt();
 				int open_file_descriptors = node.path("process").path("open_file_descriptors").asInt();
 
 				JsonNode memory = node.path("jvm").path("mem");
-				int heap_used = convertBytesToMB(memory.path("heap_used_in_bytes").asInt());
-				int heap_committed = convertBytesToMB(memory.path("heap_committed_in_bytes").asInt());
-				int non_heap_used = convertBytesToMB(memory.path("non_heap_used_in_bytes").asInt());
-				int non_heap_committed = convertBytesToMB(memory.path("non_heap_committed_in_bytes").asInt());
+				int heap_used = convertBytesToKB(memory.path("heap_used_in_bytes").asInt());
+				int heap_committed = convertBytesToKB(memory.path("heap_committed_in_bytes").asInt());
+				int non_heap_used = convertBytesToKB(memory.path("non_heap_used_in_bytes").asInt());
+				int non_heap_committed = convertBytesToKB(memory.path("non_heap_committed_in_bytes").asInt());
 				int threads_count = node.path("jvm").path("threads").path("count").asInt();
 
 				String nodeMetricPath = "Nodes|" + nodeName + "|";
@@ -294,13 +297,13 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 	}
 
 	/**
-	 * Utility function to convert kilobytes to megabytes
+	 * Utility function to convert bytes to kilobytes
 	 * 
 	 * @param bytes
 	 * @return
 	 */
-	private int convertBytesToMB(int bytes) {
-		return (int) Math.round(bytes / (1024.0 * 1024.0));
+	private int convertBytesToKB(int bytes) {
+		return (int) Math.round(bytes / 1024.0);
 	}
 
 	/**
