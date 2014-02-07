@@ -52,6 +52,9 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 
 	public ElasticSearchMonitor() {
 		logger.setLevel(Level.INFO);
+		String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
+		logger.info(msg);
+		System.out.println(msg);
 	}
 
 	/*
@@ -343,5 +346,9 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 		} else {
 			return 0;
 		}
+	}
+
+	public static String getImplementationVersion() {
+		return ElasticSearchMonitor.class.getPackage().getImplementationTitle();
 	}
 }
