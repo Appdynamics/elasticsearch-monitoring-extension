@@ -16,7 +16,6 @@
 
 package com.appdynamics.extensions.elasticsearch;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -39,316 +38,278 @@ import com.singularity.ee.util.log4j.Log4JLogger;
 
 public class ElasticSearchMonitor extends AManagedMonitor {
 
-	private static Logger logger = Logger.getLogger(ElasticSearchMonitor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ElasticSearchMonitor.class.getName());
 
-	private static final String metricPathPrefix = "Custom Metrics|Elastic Search|";
+    private static final String METRIC_PATH_PREFIX = "Custom Metrics|Elastic Search|";
 
-	private static final String indexStatsResource = "_stats";
-	private static final String nodeStatsResource = "_cluster/nodes/stats?all=true";
-	private static final String clusterStatsResource = "_cluster/health";
+    private static final String INDEX_STATS_RESOURCE = "_stats";
+    private static final String NODE_STATS_RESOURCE_v090 = "_cluster/nodes/stats?all=true";
+    private static final String NODE_STATS_RESOURCE_v100 = "_nodes/stats";
+    private static final String CLUSTER_STATS_RESOURCE = "_cluster/health";
 
-	private String host;
-	private String port;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-	public ElasticSearchMonitor() {
-		logger.setLevel(Level.INFO);
-		String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
-		logger.info(msg);
-		System.out.println(msg);
-	}
+    private String host;
+    private String port;
+    private String elasticSearchVersion;
 
-	/*
-	 * Main execution method that uploads the metrics to AppDynamics Controller
-	 * 
-	 * @see
-	 * com.singularity.ee.agent.systemagent.api.ITask#execute(java.util.Map,
-	 * com.singularity.ee.agent.systemagent.api.TaskExecutionContext)
-	 */
-	public TaskOutput execute(Map<String, String> taskArguments, TaskExecutionContext arg1) throws TaskExecutionException {
-		String indexStatsJsonStr = null;
-		String nodesStatsJsonStr = null;
-		String clusterStatsJsonStr = null;
-		try {
-			// checks for arguemts in monitor.xml (host and port)
-			checkArgs(taskArguments);
+    public ElasticSearchMonitor() {
+        LOGGER.setLevel(Level.INFO);
+        String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
+        LOGGER.info(msg);
+    }
 
-			boolean indexStatsRetrieved = true;
-			try {
-				indexStatsJsonStr = getJsonResponseString(getIndexStatsResourcePath());
-			} catch (Exception e) {
-				indexStatsRetrieved = false;
-			}
-			boolean nodeStatsRetrieved = true;
-			try {
-				nodesStatsJsonStr = getJsonResponseString(getNodeStatsResourcePath());
-			} catch (Exception e) {
-				nodeStatsRetrieved = false;
-			}
-			boolean clusterStatsRetrieved = true;
-			try {
-				clusterStatsJsonStr = getJsonResponseString(getClusterStatsResourcePath());
-			} catch (Exception e) {
-				clusterStatsRetrieved = false;
-			}
+    /*
+     * Main execution method that uploads the metrics to AppDynamics Controller
+     *
+     * @see
+     * com.singularity.ee.agent.systemagent.api.ITask#execute(java.util.Map,
+     * com.singularity.ee.agent.systemagent.api.TaskExecutionContext)
+     */
+    public TaskOutput execute(Map<String, String> taskArguments, TaskExecutionContext arg1) throws TaskExecutionException {
+        try {
+            // checks for arguments in monitor.xml (host and port)
+            extractArguments(taskArguments);
 
-			// retrieves the desired metrics and uploads them to controller
-			if (clusterStatsRetrieved) {
-				populateClusterStats(clusterStatsJsonStr);
-			}
-			if (nodeStatsRetrieved) {
-				populateNodeStats(nodesStatsJsonStr);
-			}
-			if (indexStatsRetrieved) {
-				populateIndexStats(indexStatsJsonStr);
-			}
+            determineElasticSearchVersion();
 
-			return new TaskOutput("Elastic Search Metric Upload Complete");
-		} catch (Exception e) {
-			logger.error("Elastic Search Metric upload failed");
-			return new TaskOutput("Elastic Search Metric upload failed");
-		}
-	}
+            populateIndexStats();
 
-	/**
-	 * Checks if the arguments supplied from monitor.xml are valid
-	 * 
-	 * @param taskArguments
-	 * @throws RuntimeException
-	 */
-	private void checkArgs(Map<String, String> taskArguments) throws RuntimeException {
-		if (!taskArguments.containsKey("host") || !taskArguments.containsKey("port") || (taskArguments.get("host") == null)
-				|| (taskArguments.get("port") == null) || (taskArguments.get("host") == "") || (taskArguments.get("port") == "")) {
-			logger.error("Required task arguments are missing in monitor.xml, Please provide elastic search host and port");
-			throw new RuntimeException("Required task arguments are missing in monitor.xml, Please provide elastic search host and port");
-		}
-		host = taskArguments.get("host");
-		port = taskArguments.get("port");
-	}
+            populateNodeStats();
 
-	/**
-	 * Connects to the provided webresource and returns the JSON response string
-	 * 
-	 * @param resource
-	 * @return
-	 * @throws IOException
-	 */
-	private String getJsonResponseString(String resource) {
-		IHttpClientWrapper httpClient = HttpClientWrapper.getInstance();
-		HttpExecutionRequest request = new HttpExecutionRequest(resource, "", HttpOperation.GET);
-		HttpExecutionResponse response = httpClient.executeHttpOperation(request, new Log4JLogger(logger));
-		if (response.isExceptionHappened() || response.getStatusCode() == 400) {
-			logger.error("Elastic search instance down OR URL " + resource + " not supported");
-			throw new RuntimeException("Elastic search instance down OR URL " + resource + " not supported");
-		}
-		return response.getResponseBody();
-	}
+            populateClusterStats();
 
-	/**
-	 * Retrieves the desired index stats and uploads them to AppDynamics
-	 * Controller
-	 * 
-	 * @param jsonString
-	 * @throws Exception
-	 */
-	private void populateIndexStats(String jsonString) throws Exception {
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			JsonNode indicesRootNode = mapper.readValue(jsonString.getBytes(), JsonNode.class).path("indices");
-			if (indicesRootNode != null && indicesRootNode.size() <= 0) {
-				indicesRootNode = mapper.readValue(jsonString.getBytes(), JsonNode.class).path("_all").path("indices");
-			}
-			Iterator<String> nodes = indicesRootNode.fieldNames();
-			while (nodes.hasNext()) {
-				String indexName = nodes.next();
-				JsonNode node = indicesRootNode.path(indexName);
-				int primarySize = convertBytesToKB(node.path("primaries").path("store").path("size_in_bytes").asInt());
-				int size = convertBytesToKB(node.path("total").path("store").path("size_in_bytes").asInt());
-				int num_docs = node.path("primaries").path("docs").path("count").asInt();
+            return new TaskOutput("Elastic Search Metric Upload Complete");
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+            return new TaskOutput("Elastic Search Metric upload failed");
+        }
+    }
 
-				String indexMetricPath = "Indices|" + indexName + "|";
+    private void determineElasticSearchVersion() {
+        try {
+            String baseEsInfo = getJsonResponseString(constructUrl());
+            LOGGER.info("Monitoring ElasticSearch: " + baseEsInfo.replaceAll("\\s+", " "));
+            JsonNode node = MAPPER.readValue(baseEsInfo.getBytes(), JsonNode.class);
+            elasticSearchVersion = node.path("version").path("number").asText();
 
-				printMetric(indexMetricPath, "primary size", primarySize);
-				printMetric(indexMetricPath, "size", size);
-				printMetric(indexMetricPath, "num docs", num_docs);
-			}
-			logger.info("No of indices: " + mapper.readValue(jsonString.getBytes(), JsonNode.class).findValue("indices").size());
-			if (logger.isDebugEnabled()) {
-				logger.debug("Retrieved Index statistics successfully");
-			}
+        } catch (Exception e) {
+            throw new RuntimeException("Error getting base Elasticsearch info: " + e.getMessage(), e);
+        }
+    }
 
-		} catch (Exception e) {
-			logger.error("Error in retrieving index statistics");
-			throw new RuntimeException("Error in retrieving index statistics");
-		}
-	}
+    /**
+     * Checks if the arguments supplied from monitor.xml are valid and extracts required host and port arguments.
+     *
+     * @param taskArguments Argument map
+     * @throws java.lang.IllegalArgumentException if the host and port are either not provided or are null or empty strings
+     */
+    private void extractArguments(Map<String, String> taskArguments) throws IllegalArgumentException {
+        if (argumentInvalid(taskArguments, "host") || argumentInvalid(taskArguments, "port")) {
+            throw new IllegalArgumentException("Required task arguments are missing in monitor.xml, Please provide elastic search host and port");
+        }
+        host = taskArguments.get("host");
+        port = taskArguments.get("port");
+    }
 
-	/**
-	 * Retrieves the desired node stats and uploads them to AppDynamics
-	 * Controller
-	 * 
-	 * @param jsonString
-	 * @throws Exception
-	 */
-	private void populateNodeStats(String jsonString) throws Exception {
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			JsonNode nodesRootNode = mapper.readValue(jsonString.getBytes(), JsonNode.class).path("nodes");
-			Iterator<String> nodes = nodesRootNode.fieldNames();
-			while (nodes.hasNext()) {
-				JsonNode node = nodesRootNode.path(nodes.next());
-				String nodeName = node.path("name").asText();
+    private boolean argumentInvalid(Map<String, String> taskArguments, String argumentKey) {
+        String value = taskArguments.get(argumentKey);
+        return value == null || "".equals(value.trim());
+    }
 
-				int indicesSize = convertBytesToKB(node.path("indices").path("store").path("size_in_bytes").asInt());
-				int num_docs = node.path("indices").path("docs").path("count").asInt();
-				int open_file_descriptors = node.path("process").path("open_file_descriptors").asInt();
+    /**
+     * Connects to the provided web resource and returns the JSON response string
+     *
+     * @param resource The URL for the resource
+     * @return The JSON response string
+     */
+    private String getJsonResponseString(String resource) {
+        IHttpClientWrapper httpClient = HttpClientWrapper.getInstance();
+        HttpExecutionRequest request = new HttpExecutionRequest(resource, "", HttpOperation.GET);
+        HttpExecutionResponse response = httpClient.executeHttpOperation(request, new Log4JLogger(LOGGER));
+        if (response.isExceptionHappened() || response.getStatusCode() >= 400) {
+            throw new RuntimeException("Elastic search instance down OR URL " + resource + " not supported");
+        }
+        return response.getResponseBody();
+    }
 
-				JsonNode memory = node.path("jvm").path("mem");
-				int heap_used = convertBytesToKB(memory.path("heap_used_in_bytes").asInt());
-				int heap_committed = convertBytesToKB(memory.path("heap_committed_in_bytes").asInt());
-				int non_heap_used = convertBytesToKB(memory.path("non_heap_used_in_bytes").asInt());
-				int non_heap_committed = convertBytesToKB(memory.path("non_heap_committed_in_bytes").asInt());
-				int threads_count = node.path("jvm").path("threads").path("count").asInt();
+    /**
+     * Retrieves the desired index stats and uploads them to AppDynamics Controller
+     *
+     * @throws Exception
+     */
+    private void populateIndexStats() throws Exception {
+        try {
+            String jsonString = getJsonResponseString(getIndexStatsResourcePath());
+            JsonNode indicesRootNode = MAPPER.readValue(jsonString.getBytes(), JsonNode.class).path("indices");
+            if (indicesRootNode != null && indicesRootNode.size() <= 0) {
+                indicesRootNode = MAPPER.readValue(jsonString.getBytes(), JsonNode.class).path("_all").path("indices");
+            }
+            if (indicesRootNode != null) {
+                Iterator<String> nodes = indicesRootNode.fieldNames();
+                while (nodes.hasNext()) {
+                    String indexName = nodes.next();
+                    JsonNode node = indicesRootNode.path(indexName);
+                    int primarySize = convertBytesToKB(node.path("primaries").path("store").path("size_in_bytes").asInt());
+                    int size = convertBytesToKB(node.path("total").path("store").path("size_in_bytes").asInt());
+                    int num_docs = node.path("primaries").path("docs").path("count").asInt();
 
-				String nodeMetricPath = "Nodes|" + nodeName + "|";
+                    String indexMetricPath = "Indices|" + indexName + "|";
 
-				printMetric(nodeMetricPath, "size of indices", indicesSize);
-				printMetric(nodeMetricPath, "num docs", num_docs);
-				printMetric(nodeMetricPath, "open file descriptors", open_file_descriptors);
+                    printMetric(indexMetricPath, "primary size", primarySize);
+                    printMetric(indexMetricPath, "size", size);
+                    printMetric(indexMetricPath, "num docs", num_docs);
+                }
+                LOGGER.info("No of indices: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("indices").size());
+                LOGGER.debug("Retrieved Index statistics successfully");
+            }
 
-				printMetric(nodeMetricPath, "heap used", heap_used);
-				printMetric(nodeMetricPath, "heap committed", heap_committed);
-				printMetric(nodeMetricPath, "non heap used", non_heap_used);
-				printMetric(nodeMetricPath, "non heap committed", non_heap_committed);
-				printMetric(nodeMetricPath, "threads count", threads_count);
-			}
-			logger.info("No of nodes: " + mapper.readValue(jsonString.getBytes(), JsonNode.class).findValue("nodes").size());
-			if (logger.isDebugEnabled()) {
-				logger.debug("Retrieved Node statistics successfully");
-			}
-		} catch (Exception e) {
-			logger.error("Error in retrieving node statistics");
-			throw new RuntimeException("Error in retrieving node statistics");
-		}
-	}
+        } catch (Exception e) {
+            throw new RuntimeException("Error in retrieving index statistics: " + e.getMessage(), e);
+        }
+    }
 
-	/**
-	 * Retrieves the desired cluster stats and uploads them to AppDynamics
-	 * Controller
-	 * 
-	 * @param jsonString
-	 * @throws Exception
-	 */
-	private void populateClusterStats(String jsonString) throws Exception {
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			JsonNode clusterNode = mapper.readValue(jsonString.getBytes(), JsonNode.class);
-			String clusterName = clusterNode.path("cluster_name").asText();
-			if ("".equals(clusterName)) {
-				logger.error("Cluster not configured, so no cluster stats available");
-			} else {
-				int number_of_nodes = clusterNode.path("number_of_nodes").asInt();
-				int number_of_data_nodes = clusterNode.path("number_of_data_nodes").asInt();
-				int active_primary_shards = clusterNode.path("active_primary_shards").asInt();
-				int active_shards = clusterNode.path("active_shards").asInt();
-				int relocating_shards = clusterNode.path("relocating_shards").asInt();
-				int initializing_shards = clusterNode.path("initializing_shards").asInt();
-				int unassigned_shards = clusterNode.path("unassigned_shards").asInt();
-				int status = defineStatus(clusterNode.path("status").asText());
+    /**
+     * Retrieves the desired node stats and uploads them to AppDynamics
+     * Controller
+     *
+     * @throws Exception
+     */
+    private void populateNodeStats() throws Exception {
+        try {
+            String jsonString = getJsonResponseString(getNodeStatsResourcePath());
+            JsonNode nodesRootNode = MAPPER.readValue(jsonString.getBytes(), JsonNode.class).path("nodes");
+            Iterator<String> nodes = nodesRootNode.fieldNames();
+            while (nodes.hasNext()) {
+                JsonNode node = nodesRootNode.path(nodes.next());
+                String nodeName = node.path("name").asText();
 
-				printMetric(clusterName + "|", "status", status);
-				printMetric(clusterName + "|", "number of nodes", number_of_nodes);
-				printMetric(clusterName + "|", "number of data nodes", number_of_data_nodes);
-				printMetric(clusterName + "|", "active primary shards", active_primary_shards);
-				printMetric(clusterName + "|", "active shards", active_shards);
-				printMetric(clusterName + "|", "relocating shards", relocating_shards);
-				printMetric(clusterName + "|", "initializing shards", initializing_shards);
-				printMetric(clusterName + "|", "unassigned shards", unassigned_shards);
-				if (logger.isDebugEnabled()) {
-					logger.debug("Retrieved cluster statistics successfully");
-				}
-			}
-		} catch (Exception e) {
-			logger.error("Error in retrieving cluster statistics");
-			throw new RuntimeException("Error in retrieving cluster statistics");
-		}
-	}
+                int indicesSize = convertBytesToKB(node.path("indices").path("store").path("size_in_bytes").asInt());
+                int num_docs = node.path("indices").path("docs").path("count").asInt();
+                int open_file_descriptors = node.path("process").path("open_file_descriptors").asInt();
 
-	private void printMetric(String metricPath, String metricName, Object metricValue) {
-		printMetric(getMetricPrefix() + metricPath, metricName, metricValue, MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE,
-				MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE, MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
-	}
+                JsonNode memory = node.path("jvm").path("mem");
+                int heap_used = convertBytesToKB(memory.path("heap_used_in_bytes").asInt());
+                int heap_committed = convertBytesToKB(memory.path("heap_committed_in_bytes").asInt());
+                int non_heap_used = convertBytesToKB(memory.path("non_heap_used_in_bytes").asInt());
+                int non_heap_committed = convertBytesToKB(memory.path("non_heap_committed_in_bytes").asInt());
+                int threads_count = node.path("jvm").path("threads").path("count").asInt();
 
-	private void printMetric(String metricPath, String metricName, Object metricValue, String aggregation, String timeRollup, String cluster) {
-		MetricWriter metricWriter = super.getMetricWriter(metricPath + metricName, aggregation, timeRollup, cluster);
-		metricWriter.printMetric(String.valueOf(metricValue));
-	}
+                String nodeMetricPath = "Nodes|" + nodeName + "|";
 
-	/**
-	 * Construct the REST Url for Index Stats
-	 * 
-	 * @return
-	 */
-	private String getIndexStatsResourcePath() {
-		return constructUrl() + indexStatsResource;
+                printMetric(nodeMetricPath, "size of indices", indicesSize);
+                printMetric(nodeMetricPath, "num docs", num_docs);
+                printMetric(nodeMetricPath, "open file descriptors", open_file_descriptors);
 
-	}
+                printMetric(nodeMetricPath, "heap used", heap_used);
+                printMetric(nodeMetricPath, "heap committed", heap_committed);
+                printMetric(nodeMetricPath, "non heap used", non_heap_used);
+                printMetric(nodeMetricPath, "non heap committed", non_heap_committed);
+                printMetric(nodeMetricPath, "threads count", threads_count);
+            }
+            LOGGER.info("No of nodes: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("nodes").size());
+            LOGGER.debug("Retrieved Node statistics successfully");
+        } catch (Exception e) {
+            throw new RuntimeException("Error in retrieving node statistics: " + e.getMessage(), e);
+        }
+    }
 
-	/**
-	 * Construct the REST Url for Node Stats
-	 * 
-	 * @return
-	 */
-	private String getNodeStatsResourcePath() {
-		return constructUrl() + nodeStatsResource;
+    /**
+     * Retrieves the desired cluster stats and uploads them to AppDynamics
+     * Controller
+     *
+     * @throws Exception
+     */
+    private void populateClusterStats() throws Exception {
+        try {
+            String jsonString = getJsonResponseString(getClusterStatsResourcePath());
+            JsonNode clusterNode = MAPPER.readValue(jsonString.getBytes(), JsonNode.class);
+            String clusterName = clusterNode.path("cluster_name").asText();
+            if ("".equals(clusterName)) {
+                LOGGER.error("Cluster not configured, so no cluster stats available");
+            } else {
+                int number_of_nodes = clusterNode.path("number_of_nodes").asInt();
+                int number_of_data_nodes = clusterNode.path("number_of_data_nodes").asInt();
+                int active_primary_shards = clusterNode.path("active_primary_shards").asInt();
+                int active_shards = clusterNode.path("active_shards").asInt();
+                int relocating_shards = clusterNode.path("relocating_shards").asInt();
+                int initializing_shards = clusterNode.path("initializing_shards").asInt();
+                int unassigned_shards = clusterNode.path("unassigned_shards").asInt();
+                int status = defineStatus(clusterNode.path("status").asText());
 
-	}
+                printMetric(clusterName + "|", "status", status);
+                printMetric(clusterName + "|", "number of nodes", number_of_nodes);
+                printMetric(clusterName + "|", "number of data nodes", number_of_data_nodes);
+                printMetric(clusterName + "|", "active primary shards", active_primary_shards);
+                printMetric(clusterName + "|", "active shards", active_shards);
+                printMetric(clusterName + "|", "relocating shards", relocating_shards);
+                printMetric(clusterName + "|", "initializing shards", initializing_shards);
+                printMetric(clusterName + "|", "unassigned shards", unassigned_shards);
+                LOGGER.debug("Retrieved cluster statistics successfully");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error in retrieving cluster statistics: " + e.getMessage(), e);
+        }
+    }
 
-	/**
-	 * Construct the REST Url for cluster Stats
-	 * 
-	 * @return
-	 */
-	private String getClusterStatsResourcePath() {
-		return constructUrl() + clusterStatsResource;
+    private void printMetric(String metricPath, String metricName, Object metricValue) {
+        printMetric(getMetricPrefix() + metricPath, metricName, metricValue, MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE,
+                MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE, MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+    }
 
-	}
+    private void printMetric(String metricPath, String metricName, Object metricValue, String aggregation, String timeRollup, String cluster) {
+        MetricWriter metricWriter = super.getMetricWriter(metricPath + metricName, aggregation, timeRollup, cluster);
+        metricWriter.printMetric(String.valueOf(metricValue));
+    }
 
-	private String constructUrl() {
-		return new StringBuilder().append("http://").append(host).append(":").append(port).append("/").toString();
-	}
+    private String getIndexStatsResourcePath() {
+        return constructUrl() + INDEX_STATS_RESOURCE;
+    }
 
-	private String getMetricPrefix() {
-		return metricPathPrefix;
-	}
+    private String getNodeStatsResourcePath() {
+        if (elasticSearchVersion.startsWith("1")) {
+            return constructUrl() + NODE_STATS_RESOURCE_v100;
+        } else {
+            return constructUrl() + NODE_STATS_RESOURCE_v090;
+        }
+    }
 
-	/**
-	 * Utility function to convert bytes to kilobytes
-	 * 
-	 * @param bytes
-	 * @return
-	 */
-	private int convertBytesToKB(int bytes) {
-		return (int) Math.round(bytes / 1024.0);
-	}
+    private String getClusterStatsResourcePath() {
+        return constructUrl() + CLUSTER_STATS_RESOURCE;
+    }
 
-	/**
-	 * Assigns an integer value to show the cluster status in AppDynamics
-	 * controller
-	 * 
-	 * @param status
-	 * @return
-	 */
-	private int defineStatus(String status) {
-		if (status.equals("green")) {
-			return 2;
-		} else if (status.equals("yellow")) {
-			return 1;
-		} else {
-			return 0;
-		}
-	}
+    private String constructUrl() {
+        return "http://" + host + ":" + port + "/";
+    }
 
-	public static String getImplementationVersion() {
-		return ElasticSearchMonitor.class.getPackage().getImplementationTitle();
-	}
+    private String getMetricPrefix() {
+        return METRIC_PATH_PREFIX;
+    }
+
+    private int convertBytesToKB(int bytes) {
+        return (int) Math.round(bytes / 1024.0);
+    }
+
+    /**
+     * Assigns an integer value to show the cluster status in AppDynamics controller
+     * green -> 2
+     * yellow -> 1
+     * red -> 0
+     *
+     * @param status Status string (green, yellow, or red)
+     * @return corresponding integer value (2, 1, or 0)
+     */
+    private int defineStatus(String status) {
+        if (status.equals("green")) {
+            return 2;
+        } else if (status.equals("yellow")) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    public static String getImplementationVersion() {
+        return ElasticSearchMonitor.class.getPackage().getImplementationTitle();
+    }
 }
