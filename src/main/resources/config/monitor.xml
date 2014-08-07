@@ -16,7 +16,7 @@
 			<argument name="port" is-required="true" default-value="9200" />
 		</task-arguments>
 		<java-task>
-		      <classpath>ElasticSearchMonitor.jar</classpath>
+		      <classpath>elasticsearch-monitoring-extension.jar</classpath>
 		          <impl-class>com.appdynamics.extensions.elasticsearch.ElasticSearchMonitor</impl-class>
 		</java-task>
 	</monitor-run-task>
