@@ -19,7 +19,6 @@ package com.appdynamics.extensions.elasticsearch;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,7 +37,9 @@ import com.singularity.ee.util.log4j.Log4JLogger;
 
 public class ElasticSearchMonitor extends AManagedMonitor {
 
-    private static final Logger LOGGER = Logger.getLogger(ElasticSearchMonitor.class.getName());
+    private static final String METRIC_SEPARATOR = "|";
+
+	private static final Logger LOGGER = Logger.getLogger("com.singularity.extensions.ElasticSearchMonitor");
 
     private static final String METRIC_PATH_PREFIX = "Custom Metrics|Elastic Search|";
 
@@ -54,9 +55,9 @@ public class ElasticSearchMonitor extends AManagedMonitor {
     private String elasticSearchVersion;
 
     public ElasticSearchMonitor() {
-        LOGGER.setLevel(Level.INFO);
         String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
         LOGGER.info(msg);
+        System.out.println(msg);
     }
 
     /*
@@ -68,6 +69,7 @@ public class ElasticSearchMonitor extends AManagedMonitor {
      */
     public TaskOutput execute(Map<String, String> taskArguments, TaskExecutionContext arg1) throws TaskExecutionException {
         try {
+        	LOGGER.info("Starting Elastic Search Monitoring Task");
             // checks for arguments in monitor.xml (host and port)
             extractArguments(taskArguments);
 
@@ -78,11 +80,12 @@ public class ElasticSearchMonitor extends AManagedMonitor {
             populateNodeStats();
 
             populateClusterStats();
-
-            return new TaskOutput("Elastic Search Metric Upload Complete");
+            
+            LOGGER.info("Elastic Search Monitoring Task completed");
+            return new TaskOutput("Elastic Search Monitoring Task completed");
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-            return new TaskOutput("Elastic Search Metric upload failed");
+            LOGGER.error("Elastic Search Monitoring Task failed", e);
+            return new TaskOutput("Elastic Search Monitoring Task failed");
         }
     }
 
@@ -94,7 +97,7 @@ public class ElasticSearchMonitor extends AManagedMonitor {
             elasticSearchVersion = node.path("version").path("number").asText();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error getting base Elasticsearch info: " + e.getMessage(), e);
+            throw new RuntimeException("Error getting base Elasticsearch info: ", e);
         }
     }
 
@@ -154,18 +157,18 @@ public class ElasticSearchMonitor extends AManagedMonitor {
                     int size = convertBytesToKB(node.path("total").path("store").path("size_in_bytes").asInt());
                     int num_docs = node.path("primaries").path("docs").path("count").asInt();
 
-                    String indexMetricPath = "Indices|" + indexName + "|";
+                    String indexMetricPath = "Indices|" + indexName + METRIC_SEPARATOR;
 
                     printMetric(indexMetricPath, "primary size", primarySize);
                     printMetric(indexMetricPath, "size", size);
                     printMetric(indexMetricPath, "num docs", num_docs);
                 }
-                LOGGER.info("No of indices: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("indices").size());
+                LOGGER.debug("No of indices: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("indices").size());
                 LOGGER.debug("Retrieved Index statistics successfully");
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("Error in retrieving index statistics: " + e.getMessage(), e);
+            LOGGER.error("Error in retrieving index statistics: ", e);
         }
     }
 
@@ -195,7 +198,7 @@ public class ElasticSearchMonitor extends AManagedMonitor {
                 int non_heap_committed = convertBytesToKB(memory.path("non_heap_committed_in_bytes").asInt());
                 int threads_count = node.path("jvm").path("threads").path("count").asInt();
 
-                String nodeMetricPath = "Nodes|" + nodeName + "|";
+                String nodeMetricPath = "Nodes|" + nodeName + METRIC_SEPARATOR;
 
                 printMetric(nodeMetricPath, "size of indices", indicesSize);
                 printMetric(nodeMetricPath, "num docs", num_docs);
@@ -207,10 +210,10 @@ public class ElasticSearchMonitor extends AManagedMonitor {
                 printMetric(nodeMetricPath, "non heap committed", non_heap_committed);
                 printMetric(nodeMetricPath, "threads count", threads_count);
             }
-            LOGGER.info("No of nodes: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("nodes").size());
+            LOGGER.debug("No of nodes: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("nodes").size());
             LOGGER.debug("Retrieved Node statistics successfully");
         } catch (Exception e) {
-            throw new RuntimeException("Error in retrieving node statistics: " + e.getMessage(), e);
+        	LOGGER.error("Error in retrieving node statistics: ", e);
         }
     }
 
@@ -237,18 +240,19 @@ public class ElasticSearchMonitor extends AManagedMonitor {
                 int unassigned_shards = clusterNode.path("unassigned_shards").asInt();
                 int status = defineStatus(clusterNode.path("status").asText());
 
-                printMetric(clusterName + "|", "status", status);
-                printMetric(clusterName + "|", "number of nodes", number_of_nodes);
-                printMetric(clusterName + "|", "number of data nodes", number_of_data_nodes);
-                printMetric(clusterName + "|", "active primary shards", active_primary_shards);
-                printMetric(clusterName + "|", "active shards", active_shards);
-                printMetric(clusterName + "|", "relocating shards", relocating_shards);
-                printMetric(clusterName + "|", "initializing shards", initializing_shards);
-                printMetric(clusterName + "|", "unassigned shards", unassigned_shards);
+                String clusterMetricPath = clusterName + METRIC_SEPARATOR;
+				printMetric(clusterMetricPath, "status", status);
+                printMetric(clusterMetricPath, "number of nodes", number_of_nodes);
+                printMetric(clusterMetricPath, "number of data nodes", number_of_data_nodes);
+                printMetric(clusterMetricPath, "active primary shards", active_primary_shards);
+                printMetric(clusterMetricPath, "active shards", active_shards);
+                printMetric(clusterMetricPath, "relocating shards", relocating_shards);
+                printMetric(clusterMetricPath, "initializing shards", initializing_shards);
+                printMetric(clusterMetricPath, "unassigned shards", unassigned_shards);
                 LOGGER.debug("Retrieved cluster statistics successfully");
             }
         } catch (Exception e) {
-            throw new RuntimeException("Error in retrieving cluster statistics: " + e.getMessage(), e);
+        	LOGGER.error("Error in retrieving cluster statistics: ", e);
         }
     }
 
