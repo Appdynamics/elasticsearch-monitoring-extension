@@ -47,10 +47,6 @@ The following metrics are reported for each Node in the cluster under Nodes | \<
 |size of indices		| size of indices (MB)	|
 |num docs			| number of documents|
 |open file descriptors		| open file descriptors count|
-|heap used			| heap used (MB)|
-|heap committed			| heap committed (MB)|
-|non heap used			| non heap used (MB)|
-|non heap committed		| non heap committed (MB)|
 |threads count			| number of threads used|
 
 Indices Statistics
