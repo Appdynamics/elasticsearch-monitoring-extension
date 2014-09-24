@@ -17,6 +17,17 @@ This extension collects cluster health metrics, nodes and indices stats from a E
      <pre>
      &lt;argument name="host" is-required="true" default-value="localhost" /&gt;
      &lt;argument name="port" is-required="true" default-value="9200" /&gt;
+     
+     &lt; !-- Optional Properties -- &gt;
+	 &lt;argument name="username" is-required="true" default-value=""/&gt;
+	 &lt;argument name="password" is-required="false" default-value=""/&gt;
+	 &lt;argument name="use-ssl" is-required="false" default-value="false"/&gt;
+	 &lt;argument name="proxy-host" is-required="false" default-value=""/&gt;
+	 &lt;argument name="proxy-port" is-required="false" default-value=""/&gt;
+	 &lt;argument name="proxy-username" is-required="false" default-value=""/&gt;
+	 &lt;argument name="proxy-password" is-required="false" default-value=""/&gt;
+	 &lt;argument name="metric-prefix" is-required="false" default-value="Custom Metrics|Elastic Search|"/&gt;
+
      </pre>
 5. Restart the Machine Agent.
 
@@ -71,6 +82,6 @@ Find out more in the [AppSphere](http://appsphere.appdynamics.com/t5/AppDynamics
 
 ##Support
 
-For any questions or feature request, please contact [AppDynamics Center of Excellence](mailto:ace-request@appdynamics.com).
+For any questions or feature request, please contact [AppDynamics Support](mailto:help@appdynamics.com).
 
 
