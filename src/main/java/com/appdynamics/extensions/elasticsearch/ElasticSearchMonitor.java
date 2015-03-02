@@ -80,9 +80,9 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 			LOGGER.info("Elastic Search Monitoring Task completed");
 			return new TaskOutput("Elastic Search Monitoring Task completed");
 		} catch (Exception e) {
-			LOGGER.error("Elastic Search Monitoring Task failed", e);
-			return new TaskOutput("Elastic Search Monitoring Task failed");
+			LOGGER.error("Elastic Search Monitoring Task failed ", e);
 		}
+		throw new TaskExecutionException("Elastic Search Monitoring Task failed");
 	}
 
 	private void determineElasticSearchVersion(SimpleHttpClient httpClient) {
