@@ -1,0 +1,2 @@
+cluster  status nodeTotal nodeData shards shardsPrimary shardsRelocating shardsInitializing shardsUnassigned 
+prdac-03 green         25       12    591           197                0                  0                0 

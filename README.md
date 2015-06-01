@@ -13,20 +13,52 @@ This extension collects cluster health metrics, nodes and indices stats from a E
 1. Run 'mvn clean install' from the elasticsearch-monitoring-extension directory
 2. Download the file ElasticSearchMonitor.zip located in the 'target' directory into \<machineagent install dir\>/monitors/
 3. Unzip the downloaded file
-4. In \<machineagent install dir\>/monitors/ElasticSearchMonitor/, open monitor.xml and configure the ElasticSearch parameters.
+4. In \<machineagent install dir\>/monitors/ElasticSearchMonitor/, open config.yaml and configure the ElasticSearch parameters.
      <pre>
-     &lt;argument name="host" is-required="true" default-value="localhost" /&gt;
-     &lt;argument name="port" is-required="true" default-value="9200" /&gt;
-     
-     &lt; !-- Optional Properties -- &gt;
-	 &lt;argument name="username" is-required="true" default-value=""/&gt;
-	 &lt;argument name="password" is-required="false" default-value=""/&gt;
-	 &lt;argument name="use-ssl" is-required="false" default-value="false"/&gt;
-	 &lt;argument name="proxy-host" is-required="false" default-value=""/&gt;
-	 &lt;argument name="proxy-port" is-required="false" default-value=""/&gt;
-	 &lt;argument name="proxy-username" is-required="false" default-value=""/&gt;
-	 &lt;argument name="proxy-password" is-required="false" default-value=""/&gt;
-	 &lt;argument name="metric-prefix" is-required="false" default-value="Custom Metrics|Elastic Search|"/&gt;
+     servers:
+       - host: ""
+         port: ""
+         displayName: ""
+         # To disable the pull of json metrics
+         enableJsonMetrics: true
+         # To get the metrics through CAT apis
+         catEndPoints:
+           - endPoint: "/_cat/allocation?v&bytes=b&h=node,shards,diskUsed,diskAvailable,diskTotal,diskPercent"
+              # Any prefixes
+             metricPrefix: "Allocation"
+              # The keys to be used in metric path. Picks up in the same order.
+             metricKeys: [
+                "node"
+             ]
+
+           - endPoint: "/_cat/indices?v&bytes=b&h=index,health,status,shardsPrimary,shardsReplica,docsCount,docsDeleted,storeSize,pri.store.size"
+             metricPrefix: "Indices"
+             metricKeys: [
+                "index"
+             ]
+
+           - endPoint: "/_cat/recovery?v&bytes=b&h=index,shard,files,files_percent,bytes,bytes_percent"
+             metricPrefix: "Recovery"
+             metricKeys: [
+                "index"
+             ]
+
+           - endPoint: "_cat/thread_pool?v&bytes=b&h=host,bulk.active,bulk.size,bulk.queue,bulk.queueSize,bulk.rejected,bulk.largest,bulk.completed,bulk.min,bulk.max"
+             metricPrefix: "ThreadPool"
+             metricKeys: [
+               "host"
+             ]
+
+           - endPoint: "/_cat/shards?v&bytes=b&h=node,index,shard,docs,store"
+             metricPrefix: "Shards"
+             metricKeys: [
+                "node",
+                "index"
+             ]
+
+     metricPathPrefix: "Custom Metrics|Elastic Search|"
+
+
 
      </pre>
 5. Restart the Machine Agent.
@@ -68,6 +100,11 @@ The following metrics are reported for each Index under Indices | \<IndexName\>
 |primary size			| primary size of index (MB)	|
 |size				| total size of index (MB)|
 |num docs			| number of documents|
+
+
+Cat Level Statistics
+As mentioned https://www.elastic.co/guide/en/elasticsearch/reference/current/cat.html
+
 
 ## Custom Dashboard
 ![](https://raw.github.com/Appdynamics/elasticsearch-monitoring-extension/master/Dashboard.png)

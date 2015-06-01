@@ -16,13 +16,22 @@
 
 package com.appdynamics.extensions.elasticsearch;
 
-import java.util.HashMap;
+import java.io.File;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.appdynamics.TaskInputArgs;
+import com.appdynamics.extensions.elasticsearch.config.CatApiConfig;
+import com.appdynamics.extensions.elasticsearch.config.Configuration;
+import com.appdynamics.extensions.elasticsearch.config.Server;
+import com.appdynamics.extensions.yml.YmlReader;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import org.apache.log4j.Logger;
 
-import com.appdynamics.extensions.ArgumentsValidator;
 import com.appdynamics.extensions.http.Response;
 import com.appdynamics.extensions.http.SimpleHttpClient;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -36,7 +45,7 @@ import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException
 public class ElasticSearchMonitor extends AManagedMonitor {
 
 	private static final String METRIC_SEPARATOR = "|";
-	private static final Logger LOGGER = Logger.getLogger("com.singularity.extensions.ElasticSearchMonitor");
+	private static final Logger logger = Logger.getLogger("com.singularity.extensions.ElasticSearchMonitor");
 	private static String METRIC_PATH_PREFIX = "Custom Metrics|Elastic Search|";
 
 	private static final String INDEX_STATS_RESOURCE = "_stats";
@@ -46,49 +55,97 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	private String elasticSearchVersion;
+	public static final String CONFIG_ARG = "config-file";
 
 	public ElasticSearchMonitor() {
 		String msg = "Using Monitor Version [" + getImplementationVersion() + "]";
-		LOGGER.info(msg);
+		logger.info(msg);
 		System.out.println(msg);
 	}
 
-	private static final Map<String, String> DEFAULT_ARGS = new HashMap<String, String>() {
-		{
-			put("metric-prefix", METRIC_PATH_PREFIX);
-		}
-	};
+
 
 	/*
 	 * Main execution method that uploads the metrics to AppDynamics Controller
-	 * 
+	 *
 	 * @see
 	 * com.singularity.ee.agent.systemagent.api.ITask#execute(java.util.Map,
 	 * com.singularity.ee.agent.systemagent.api.TaskExecutionContext)
 	 */
 	public TaskOutput execute(Map<String, String> taskArguments, TaskExecutionContext arg1) throws TaskExecutionException {
-		try {
-			LOGGER.info("Starting Elastic Search Monitoring Task");
-			taskArguments = ArgumentsValidator.validateArguments(taskArguments, DEFAULT_ARGS);
-			SimpleHttpClient httpClient = SimpleHttpClient.builder(taskArguments).build();
-
-			determineElasticSearchVersion(httpClient);
-			populateIndexStats(httpClient);
-			populateNodeStats(httpClient);
-			populateClusterStats(httpClient);
-
-			LOGGER.info("Elastic Search Monitoring Task completed");
-			return new TaskOutput("Elastic Search Monitoring Task completed");
-		} catch (Exception e) {
-			LOGGER.error("Elastic Search Monitoring Task failed ", e);
+		if (taskArguments != null) {
+			logger.info("Starting Elastic Search Monitoring Task");
+			if (logger.isDebugEnabled()) {
+				logger.debug("Task Arguments Passed ::" + taskArguments);
+			}
+			Configuration config = null;
+			try{
+				config = YmlReader.readFromFile(taskArguments.get(CONFIG_ARG), Configuration.class);
+				setMetricPathPrefix(config.getMetricPathPrefix());
+				if(config.getServers() != null && config.getServers().length > 0) {
+					Map<String,String> args = createArgsMap(config);
+					SimpleHttpClient httpClient = SimpleHttpClient.builder(args).build();
+					Server server = config.getServers()[0];
+					if (server.isEnableJsonMetrics()) {
+						determineElasticSearchVersion(httpClient);
+						populateIndexStats(httpClient);
+						populateNodeStats(httpClient);
+						populateClusterStats(httpClient);
+					}
+					populateCatStats(server,httpClient);
+					logger.info("Elastic Search Monitoring Task completed");
+					return new TaskOutput("Elastic Search Monitoring Task completed");
+				}
+			}
+			 catch (Exception e) {
+				e.printStackTrace();
+				logger.error("Metrics collection failed", e);
+			}
 		}
 		throw new TaskExecutionException("Elastic Search Monitoring Task failed");
 	}
 
+	private void populateCatStats(Server server,SimpleHttpClient httpClient) {
+		if(server.getCatEndPoints() != null) {
+			CatMetricsClient catMetricsClient = new CatMetricsClient();
+			Map<String,String> metrics = Maps.newHashMap();
+			for (CatApiConfig apiConfig : server.getCatEndPoints()) {
+				try {
+					String response = getResponseString(httpClient,apiConfig.getEndPoint());
+					metrics.putAll(catMetricsClient.extractMetrics(response, apiConfig.getMetricKeys(),apiConfig.getMetricPrefix()));
+				} catch (Exception e) {
+					logger.error("Unable to execute the request " + apiConfig.getEndPoint()+ "Failed with Error :" + e);
+				}
+			}
+			printMetrics(server.getDisplayName(), metrics);
+		}
+
+	}
+
+	private void printMetrics(String displayName,Map<String, String> metrics) {
+		for (Map.Entry<String, String> entry : metrics.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+			printMetric(displayName + METRIC_SEPARATOR,key,value);
+		}
+	}
+
+
+
+
+	private Map<String, String> createArgsMap(Configuration config) {
+		Map<String,String> argsMap = Maps.newHashMap();
+		argsMap.put(TaskInputArgs.HOST,config.getServers()[0].getHost());
+		argsMap.put(TaskInputArgs.PORT, Integer.toString(config.getServers()[0].getPort()));
+		return argsMap;
+	}
+
+
+
 	private void determineElasticSearchVersion(SimpleHttpClient httpClient) {
 		try {
-			String baseEsInfo = getJsonResponseString(httpClient, null);
-			LOGGER.info("Monitoring ElasticSearch: " + baseEsInfo.replaceAll("\\s+", " "));
+			String baseEsInfo = getResponseString(httpClient, null);
+			logger.info("Monitoring ElasticSearch: " + baseEsInfo.replaceAll("\\s+", " "));
 			JsonNode node = MAPPER.readValue(baseEsInfo.getBytes(), JsonNode.class);
 			elasticSearchVersion = node.path("version").path("number").asText();
 
@@ -98,15 +155,15 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 	}
 
 	/**
-	 * Connects to the provided web resource and returns the JSON response
+	 * Connects to the provided web resource and returns the  response
 	 * string
-	 * 
+	 *
 	 * @param httpClient
 	 *            The URL for the resource
-	 * @return The JSON response string
+	 * @return The  response string
 	 * @throws Exception
 	 */
-	private String getJsonResponseString(SimpleHttpClient httpClient, String path) throws Exception {
+	private String getResponseString(SimpleHttpClient httpClient, String path) throws Exception {
 		Response response = null;
 		try {
 			response = httpClient.target().path(path).get();
@@ -123,14 +180,14 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 	/**
 	 * Retrieves the desired index stats and uploads them to AppDynamics
 	 * Controller
-	 * 
+	 *
 	 * @param httpClient
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	private void populateIndexStats(SimpleHttpClient httpClient) throws Exception {
 		try {
-			String jsonString = getJsonResponseString(httpClient, INDEX_STATS_RESOURCE);
+			String jsonString = getResponseString(httpClient, INDEX_STATS_RESOURCE);
 			JsonNode indicesRootNode = MAPPER.readValue(jsonString.getBytes(), JsonNode.class).path("indices");
 			if (indicesRootNode != null && indicesRootNode.size() <= 0) {
 				indicesRootNode = MAPPER.readValue(jsonString.getBytes(), JsonNode.class).path("_all").path("indices");
@@ -149,26 +206,26 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 					printMetric(indexMetricPath, "size", size);
 					printMetric(indexMetricPath, "num docs", num_docs);
 				}
-				LOGGER.debug("No of indices: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("indices").size());
-				LOGGER.debug("Retrieved Index statistics successfully");
+				logger.debug("No of indices: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("indices").size());
+				logger.debug("Retrieved Index statistics successfully");
 			}
 
 		} catch (Exception e) {
-			LOGGER.error("Error in retrieving index statistics: ", e);
+			logger.error("Error in retrieving index statistics: ", e);
 		}
 	}
 
 	/**
 	 * Retrieves the desired node stats and uploads them to AppDynamics
 	 * Controller
-	 * 
+	 *
 	 * @param httpClient
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	private void populateNodeStats(SimpleHttpClient httpClient) throws Exception {
 		try {
-			String jsonString = getJsonResponseString(httpClient, getNodeStatsResourcePath());
+			String jsonString = getResponseString(httpClient, getNodeStatsResourcePath());
 			JsonNode nodesRootNode = MAPPER.readValue(jsonString.getBytes(), JsonNode.class).path("nodes");
 			Iterator<String> nodes = nodesRootNode.fieldNames();
 			while (nodes.hasNext()) {
@@ -186,28 +243,28 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 				printMetric(nodeMetricPath, "open file descriptors", open_file_descriptors);
 				printMetric(nodeMetricPath, "threads count", threads_count);
 			}
-			LOGGER.debug("No of nodes: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("nodes").size());
-			LOGGER.debug("Retrieved Node statistics successfully");
+			logger.debug("No of nodes: " + MAPPER.readValue(jsonString.getBytes(), JsonNode.class).findValue("nodes").size());
+			logger.debug("Retrieved Node statistics successfully");
 		} catch (Exception e) {
-			LOGGER.error("Error in retrieving node statistics: ", e);
+			logger.error("Error in retrieving node statistics: ", e);
 		}
 	}
 
 	/**
 	 * Retrieves the desired cluster stats and uploads them to AppDynamics
 	 * Controller
-	 * 
+	 *
 	 * @param httpClient
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	private void populateClusterStats(SimpleHttpClient httpClient) throws Exception {
 		try {
-			String jsonString = getJsonResponseString(httpClient, CLUSTER_STATS_RESOURCE);
+			String jsonString = getResponseString(httpClient, CLUSTER_STATS_RESOURCE);
 			JsonNode clusterNode = MAPPER.readValue(jsonString.getBytes(), JsonNode.class);
 			String clusterName = clusterNode.path("cluster_name").asText();
 			if ("".equals(clusterName)) {
-				LOGGER.error("Cluster not configured, so no cluster stats available");
+				logger.error("Cluster not configured, so no cluster stats available");
 			} else {
 				int number_of_nodes = clusterNode.path("number_of_nodes").asInt();
 				int number_of_data_nodes = clusterNode.path("number_of_data_nodes").asInt();
@@ -227,15 +284,17 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 				printMetric(clusterMetricPath, "relocating shards", relocating_shards);
 				printMetric(clusterMetricPath, "initializing shards", initializing_shards);
 				printMetric(clusterMetricPath, "unassigned shards", unassigned_shards);
-				LOGGER.debug("Retrieved cluster statistics successfully");
+				logger.debug("Retrieved cluster statistics successfully");
 			}
 		} catch (Exception e) {
-			LOGGER.error("Error in retrieving cluster statistics: ", e);
+			logger.error("Error in retrieving cluster statistics: ", e);
 		}
 	}
 
 	private void printMetric(String metricPath, String metricName, Object metricValue) {
-		printMetric(getMetricPrefix() + metricPath, metricName, metricValue, MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE,
+		//System.out.println(getMetricPathPrefix() + metricPath + metricName + "=>" + metricValue);
+		logger.debug(getMetricPathPrefix() + metricPath + metricName + "=>" + metricValue);
+		printMetric(getMetricPathPrefix() + metricPath, metricName, metricValue, MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE,
 				MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE, MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
 	}
 
@@ -254,11 +313,19 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 		}
 	}
 
-	private String getMetricPrefix() {
+	private String getMetricPathPrefix() {
 		if (!METRIC_PATH_PREFIX.endsWith("|")) {
 			METRIC_PATH_PREFIX += METRIC_SEPARATOR;
 		}
 		return METRIC_PATH_PREFIX;
+	}
+
+
+	private void setMetricPathPrefix(String metricPathPrefix) {
+		if(Strings.isNullOrEmpty(metricPathPrefix)){
+			return;
+		}
+		METRIC_PATH_PREFIX = metricPathPrefix;
 	}
 
 	private int convertBytesToKB(int bytes) {

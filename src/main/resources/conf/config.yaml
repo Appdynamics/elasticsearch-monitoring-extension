@@ -1,0 +1,43 @@
+servers:
+  - host: ""
+    port: ""
+    displayName: ""
+    # To disable the pull of json metrics
+    enableJsonMetrics: true
+    # To get the metrics through CAT apis
+    catEndPoints:
+      - endPoint: "/_cat/allocation?v&bytes=b&h=node,shards,diskUsed,diskAvailable,diskTotal,diskPercent"
+         # Any prefixes
+        metricPrefix: "Allocation"
+         # The keys to be used in metric path. Picks up in the same order.
+        metricKeys: [
+           "node"
+        ]
+
+      - endPoint: "/_cat/indices?v&bytes=b&h=index,health,status,shardsPrimary,shardsReplica,docsCount,docsDeleted,storeSize,pri.store.size"
+        metricPrefix: "Indices"
+        metricKeys: [
+           "index"
+        ]
+
+      - endPoint: "/_cat/recovery?v&bytes=b&h=index,shard,files,files_percent,bytes,bytes_percent"
+        metricPrefix: "Recovery"
+        metricKeys: [
+           "index"
+        ]
+
+      - endPoint: "_cat/thread_pool?v&bytes=b&h=host,bulk.active,bulk.size,bulk.queue,bulk.queueSize,bulk.rejected,bulk.largest,bulk.completed,bulk.min,bulk.max"
+        metricPrefix: "ThreadPool"
+        metricKeys: [
+          "host"
+        ]
+
+      - endPoint: "/_cat/shards?v&bytes=b&h=node,index,shard,docs,store"
+        metricPrefix: "Shards"
+        metricKeys: [
+           "node",
+           "index"
+        ]
+
+metricPathPrefix: "Custom Metrics|Elastic Search|"
+

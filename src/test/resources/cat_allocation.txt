@@ -1,0 +1,26 @@
+node             shards     diskUsed     diskTotal diskPercent 
+prdaes03data09       36 449976676352 1582455173120          28 
+prdaes03data12       43 510677966848 1582455173120          32 
+prdaes03master01      0   7384395776   86161879040           8 
+prdaes03data07       59 616375255040 1582455173120          38 
+prdaes03master02      0   6449577984   86161879040           7 
+prdaes03data10       56 562329849856 1582455173120          35 
+prdaes03data01       56 583801720832 1582455173120          36 
+prdaapi03             0            0                           
+prdaapi04             0            0                           
+prdaapi02             0            0                           
+prdaapi05             0            0                           
+prdaes03data03       56 572414820352 1582455173120          36 
+prdaes03data08       38 505778032640 1582455173120          31 
+prdaindexer01         0            0                           
+prdaindexer02         0            0                           
+prdaapi01             0            0                           
+prdaes03master03      0   6477336576   86161879040           7 
+prdaes03data04       60 708591255552 1582455173120          44 
+prdaes03data06       36 443755831296 1582455173120          28 
+prdaindexer04         0            0                           
+prdaindexer03         0            0                           
+prdaes03data02       59 597910200320 1582455173120          37 
+prdaindexer05         0            0                           
+prdaes03data05       53 583387271168 1582455173120          36 
+prdaes03data11       39 472575033344 1582455173120          29

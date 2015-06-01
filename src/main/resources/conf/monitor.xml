@@ -12,20 +12,8 @@
 		<type>java</type>
 		<execution-timeout-in-secs>60</execution-timeout-in-secs>
 		<task-arguments>
-			<argument name="host" is-required="true" default-value="localhost" />
-			<argument name="port" is-required="true" default-value="9200" />
-			
-			<!-- Optional Properties -->
-			<!--
-			<argument name="username" is-required="true" default-value=""/>
-			<argument name="password" is-required="false" default-value=""/>
-			<argument name="use-ssl" is-required="false" default-value="false"/>
-			<argument name="proxy-host" is-required="false" default-value=""/>
-			<argument name="proxy-port" is-required="false" default-value=""/>
-			<argument name="proxy-username" is-required="false" default-value=""/>
-			<argument name="proxy-password" is-required="false" default-value=""/>
-			<argument name="metric-prefix" is-required="false" default-value="Custom Metrics|Elastic Search|"/>
-			-->
+			<!-- config file-->
+			<argument name="config-file" is-required="true" default-value="monitors/ElasticSearchMonitor/config.yaml" />
 		</task-arguments>
 		<java-task>
 		      <classpath>elasticsearch-monitoring-extension.jar</classpath>
