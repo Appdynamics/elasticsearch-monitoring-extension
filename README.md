@@ -10,14 +10,17 @@ This extension collects cluster health metrics, nodes and indices stats from a E
 
 ##Installation
 
-1. Run 'mvn clean install' from the elasticsearch-monitoring-extension directory
-2. Download the file ElasticSearchMonitor.zip located in the 'target' directory into \<machineagent install dir\>/monitors/
-3. Unzip the downloaded file
-4. In \<machineagent install dir\>/monitors/ElasticSearchMonitor/, open config.yaml and configure the ElasticSearch parameters.
-     <pre>
+1. To build from source, clone this repository and run `mvn clean install`. This will produce a ElasticSearchMonitor-VERSION.zip in the target directory. Alternatively, download the latest release archive from [Github](https://github.com/Appdynamics/elasticsearch-monitoring-extension/releases).
+2. Copy the file ElasticSearchMonitor.zip located in the 'target' directory into `<machineagent install dir>/monitors/` and unzip the file.
+3. In `<machineagent install dir>/monitors/ElasticSearchMonitor/`, open config.yaml and configure the ElasticSearch parameters.
+
+   ```
      servers:
        - host: ""
          port: ""
+         username: ""
+         password: ""
+         usessl: false
          displayName: ""
          # To disable the pull of json metrics
          enableJsonMetrics: true
@@ -57,10 +60,7 @@ This extension collects cluster health metrics, nodes and indices stats from a E
              ]
 
      metricPathPrefix: "Custom Metrics|Elastic Search|"
-
-
-
-     </pre>
+   ```
 5. Restart the Machine Agent.
 
 In the AppDynamics Metric Browser, look for: Application Infrastructure Performance  | \<Tier\> | Custom Metrics | Elastic Search
