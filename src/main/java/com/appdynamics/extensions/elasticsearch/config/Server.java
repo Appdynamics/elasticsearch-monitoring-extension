@@ -5,6 +5,9 @@ public class Server {
 
     private String host;
     private int port;
+    private String username;
+    private String password;
+    private boolean usessl;
     private String displayName;
     private boolean enableJsonMetrics;
     private CatApiConfig[] catEndPoints;
@@ -47,5 +50,29 @@ public class Server {
 
     public void setCatEndPoints(CatApiConfig[] catEndPoints) {
         this.catEndPoints = catEndPoints;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isUsessl() {
+        return usessl;
+    }
+
+    public void setUsessl(boolean usessl) {
+        this.usessl = usessl;
     }
 }

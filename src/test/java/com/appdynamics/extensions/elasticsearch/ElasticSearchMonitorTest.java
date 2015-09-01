@@ -11,11 +11,11 @@ public class ElasticSearchMonitorTest {
 
     public static final String CONFIG_ARG = "config-file";
 
-   /* @Test
-    public void testCassandraMonitorExtension() throws TaskExecutionException {
+    @Test
+    public void testElasticSearchMonitorExtension() throws TaskExecutionException {
         ElasticSearchMonitor elasticMonitor = new ElasticSearchMonitor();
         Map<String, String> taskArgs = Maps.newHashMap();
         taskArgs.put(CONFIG_ARG, "src/test/resources/conf/config.yaml");
         elasticMonitor.execute(taskArgs, null);
-    }*/
+    }
 }

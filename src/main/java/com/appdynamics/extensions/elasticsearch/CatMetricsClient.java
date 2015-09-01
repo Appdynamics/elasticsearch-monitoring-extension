@@ -49,7 +49,7 @@ public class CatMetricsClient {
                     metricsMap.put(metricKey, metricValue);
                 }
                 else{
-                    logger.warn("Metric Key ::" + metricKey + " with Metric Value ::" + metricValue + " Invalid.");
+                    logger.warn("Invalid Metric with MetricKey::" + metricKey + " and MetricValue::" + metricValue);
                 }
             }
         }
@@ -65,7 +65,7 @@ public class CatMetricsClient {
                 return true;
             }
             catch(NumberFormatException nfe){
-                logger.warn("Metric Value is invalid" + nfe);
+                //logger.warn("Metric Value is invalid " + nfe);
             }
         }
         else if(metricValue instanceof Number){

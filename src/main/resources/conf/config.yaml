@@ -1,6 +1,9 @@
 servers:
-  - host: ""
-    port: ""
+  - host: "localhost"
+    port: "9200"
+    username: ""
+    password: ""
+    usessl: false
     displayName: ""
     # To disable the pull of json metrics
     enableJsonMetrics: true

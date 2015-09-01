@@ -1,7 +1,10 @@
 servers:
-  - host: "prdaes03master01.us-west-2.appdynamics.com"
-    port: "9400"
-    displayName: "prdaes03master01"
+  - host: "localhost"
+    port: "9200"
+    username: ""
+    password: ""
+    usessl: false
+    displayName: ""
     # To disable the pull of json metrics
     enableJsonMetrics: true
     # To get the metrics through CAT apis

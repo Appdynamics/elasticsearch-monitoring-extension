@@ -16,31 +16,26 @@
 
 package com.appdynamics.extensions.elasticsearch;
 
-import java.io.File;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.util.Iterator;
-import java.util.Map;
-
 import com.appdynamics.TaskInputArgs;
 import com.appdynamics.extensions.elasticsearch.config.CatApiConfig;
 import com.appdynamics.extensions.elasticsearch.config.Configuration;
 import com.appdynamics.extensions.elasticsearch.config.Server;
-import com.appdynamics.extensions.yml.YmlReader;
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import org.apache.log4j.Logger;
-
 import com.appdynamics.extensions.http.Response;
 import com.appdynamics.extensions.http.SimpleHttpClient;
+import com.appdynamics.extensions.yml.YmlReader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.singularity.ee.agent.systemagent.api.AManagedMonitor;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import com.singularity.ee.agent.systemagent.api.TaskExecutionContext;
 import com.singularity.ee.agent.systemagent.api.TaskOutput;
 import com.singularity.ee.agent.systemagent.api.exception.TaskExecutionException;
+import org.apache.log4j.Logger;
+
+import java.util.Iterator;
+import java.util.Map;
 
 public class ElasticSearchMonitor extends AManagedMonitor {
 
@@ -126,7 +121,11 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 		for (Map.Entry<String, String> entry : metrics.entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
-			printMetric(displayName + METRIC_SEPARATOR,key,value);
+            if(!Strings.isNullOrEmpty(displayName)) {
+                printMetric(displayName + METRIC_SEPARATOR,key,value);
+            } else {
+                printMetric("",key,value);
+            }
 		}
 	}
 
@@ -137,6 +136,9 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 		Map<String,String> argsMap = Maps.newHashMap();
 		argsMap.put(TaskInputArgs.HOST,config.getServers()[0].getHost());
 		argsMap.put(TaskInputArgs.PORT, Integer.toString(config.getServers()[0].getPort()));
+        argsMap.put(TaskInputArgs.USER, config.getServers()[0].getUsername());
+        argsMap.put(TaskInputArgs.PASSWORD, config.getServers()[0].getPassword());
+        argsMap.put(TaskInputArgs.USE_SSL, String.valueOf(config.getServers()[0].isUsessl()));
 		return argsMap;
 	}
 
@@ -301,7 +303,11 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 	private void printMetric(String metricPath, String metricName, Object metricValue, String aggregation, String timeRollup, String cluster) {
 		MetricWriter metricWriter = super.getMetricWriter(metricPath + metricName, aggregation, timeRollup, cluster);
 		if (metricValue != null) {
-			metricWriter.printMetric(String.valueOf(metricValue));
+            try {
+                metricWriter.printMetric(String.valueOf(metricValue));
+            } catch (Exception e) {
+                logger.error(e);
+            }
 		}
 	}
 
