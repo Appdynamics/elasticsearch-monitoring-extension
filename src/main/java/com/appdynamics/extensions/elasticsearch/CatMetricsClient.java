@@ -45,6 +45,17 @@ public class CatMetricsClient {
             if(!keyOffsets.contains(tokenIndex)){
                 String metricKey = metricKeyPrefix + headers.get(tokenIndex);
                 String metricValue = metricTokens[tokenIndex];
+                if(metricKey.endsWith("_percent")) {
+                    if (metricValue != null && metricValue.length() > 0 && metricValue.charAt(metricValue.length()-1)=='%') {
+                        metricValue = String.valueOf(Math.round(Double.parseDouble(metricValue.substring(0, metricValue.length()-1))));
+                    }
+                }
+                else if(metricKey.endsWith("health")) {
+                    metricValue = defineIndexHealth(metricValue);
+                }
+                else if(metricKey.endsWith("status")) {
+                    metricValue = defineIndexStatus(metricValue);
+                }
                 if(isMetricValueValid(metricValue)) {
                     metricsMap.put(metricKey, metricValue);
                 }
@@ -110,5 +121,39 @@ public class CatMetricsClient {
             tokens.add(str);
         }
         return tokens;
+    }
+
+    /**
+     * Assigns an integer value to show the index health in AppDynamics
+     * controller green -> 2 yellow -> 1 red -> 0
+     *
+     * @param health
+     *            Status string (green, yellow, or red)
+     * @return corresponding string value (2, 1, or 0)
+     */
+    private String defineIndexHealth(String health) {
+        if (health.equals("green")) {
+            return "2";
+        } else if (health.equals("yellow")) {
+            return "1";
+        } else {
+            return "0";
+        }
+    }
+
+    /**
+     * Assigns an integer value to show the index status in AppDynamics
+     * controller open -> 1 close -> 0
+     *
+     * @param status
+     *            Status string (green, yellow, or red)
+     * @return corresponding string value (1 or 0)
+     */
+    private String defineIndexStatus(String status) {
+        if (status.equals("open")) {
+            return "1";
+        } else {
+            return "0";
+        }
     }
 }
