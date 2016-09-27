@@ -312,10 +312,10 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 	}
 
 	private String getNodeStatsResourcePath() {
-		if (elasticSearchVersion.startsWith("1")) {
-			return NODE_STATS_RESOURCE_v100;
-		} else {
+		if (elasticSearchVersion.startsWith("0")) {
 			return NODE_STATS_RESOURCE_v090;
+		} else {
+			return NODE_STATS_RESOURCE_v100;
 		}
 	}
 
