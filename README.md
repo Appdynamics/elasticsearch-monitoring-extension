@@ -1,4 +1,4 @@
-# AppDynamics Elasticsearch Monitoring Extension
+# AppDynamics Monitoring Extension for use with Elasticsearch
 
 This extension works only with the standalone machine agent.
 
