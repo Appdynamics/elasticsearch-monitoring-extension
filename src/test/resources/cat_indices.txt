@@ -22,3 +22,9 @@ active_static_index___2014-12-26_21-36-59  green  open               6          
 active_static_index___2015-04-18_19-47-08  green  open               7             2  244730076   381027016  558153228753   186051076251
 active_static_index___2015-04-29_21-59-13  green  open               9             2  280086403   547728533  724058264438   241323953310
 active_dynamic_index___2015-04-14_16-59-40 green  open              14             2      82427      159025     403634265      134544796
+
+
+
+
+index health status shardsPrimary shardsReplica docsCount docsDeleted storeSize pri.store.size searchQueryTime searchQueryTotal searchQueryCurrent searchFetchTotal searchFetchTime searchFetchCurrent indexingIndexTotal indexingIndexTime
+blog  yellow open               5             1         2           0      7597           7597               0                0                  0                0               0                  0                  0                 0

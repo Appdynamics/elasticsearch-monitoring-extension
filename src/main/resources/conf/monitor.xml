@@ -14,7 +14,7 @@
 		<execution-timeout-in-secs>60</execution-timeout-in-secs>
 		<task-arguments>
 			<!-- config file-->
-			<argument name="config-file" is-required="true" default-value="monitors/ElasticSearchMonitor/config.yaml" />
+			<argument name="config-file" is-required="true" default-value="monitors/ElasticSearchMonitor/config.yml" />
 		</task-arguments>
 		<java-task>
 		      <classpath>elasticsearch-monitoring-extension.jar</classpath>

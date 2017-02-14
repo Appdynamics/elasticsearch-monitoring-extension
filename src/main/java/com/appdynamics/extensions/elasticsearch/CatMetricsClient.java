@@ -2,6 +2,7 @@ package com.appdynamics.extensions.elasticsearch;
 
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.LineReader;
@@ -9,7 +10,8 @@ import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 public class CatMetricsClient {
 
@@ -88,8 +90,10 @@ public class CatMetricsClient {
     private String buildMetricKeyPrefix(List<String> tokens, List<Integer> keyOffsets,String metricPrefix) {
         StringBuilder prefixBuilder = new StringBuilder();
         for(int offset : keyOffsets){
-            prefixBuilder.append(metricPrefix);
-            prefixBuilder.append(METRIC_PATH_SEPARATOR);
+            if (!Strings.isNullOrEmpty(metricPrefix)) {
+                prefixBuilder.append(metricPrefix);
+                prefixBuilder.append(METRIC_PATH_SEPARATOR);
+            }
             prefixBuilder.append(tokens.get(offset));
             prefixBuilder.append(METRIC_PATH_SEPARATOR);
         }
