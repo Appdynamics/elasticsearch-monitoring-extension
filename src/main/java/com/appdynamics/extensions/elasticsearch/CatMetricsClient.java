@@ -58,6 +58,11 @@ public class CatMetricsClient {
                 else if(metricKey.endsWith("status")) {
                     metricValue = defineIndexStatus(metricValue);
                 }
+                // deal with Cluster Status Metric
+                else if(metricKey.endsWith("st")) {
+                    metricKey = metricKey.substring(0, metricKey.length() - 2) + "status";
+                    metricValue = defineIndexHealth(metricValue);
+                }
                 if(isMetricValueValid(metricValue)) {
                     metricsMap.put(metricKey, metricValue);
                 }
@@ -113,9 +118,6 @@ public class CatMetricsClient {
         return keyOffsets;
     }
 
-
-
-
     public List<String> parseALine(String line) {
         Splitter spaceSplitter = Splitter.on(" ")
                 .omitEmptyStrings()
@@ -148,10 +150,6 @@ public class CatMetricsClient {
     /**
      * Assigns an integer value to show the index status in AppDynamics
      * controller open -> 1 close -> 0
-     *
-     * @param status
-     *            Status string (green, yellow, or red)
-     * @return corresponding string value (1 or 0)
      */
     private String defineIndexStatus(String status) {
         if (status.equals("open")) {

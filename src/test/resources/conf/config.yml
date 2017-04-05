@@ -11,45 +11,47 @@ servers:
     uri: "http://localhost:9200"
     username: ""
     password: ""
-    # To get the metrics through CAT apis
-    catEndPoints:
-      - endPoint: "/_cat/health?v&h=cluster,nodeTotal,nodeData,shardsTotal,shardsPrimary,shardsRelocating,shardsInitializing,shardsUnassigned,pendingTasks"
-        metricKeys: [
-           "cluster"
-        ]
 
-      - endPoint: "/_cat/allocation?v&bytes=b&h=node,shards,diskUsed,diskAvailable,diskTotal,diskPercent"
-         # Any prefixes
-        metricPrefix: "Allocation"
-         # The keys to be used in metric path. Picks up in the same order.
-        metricKeys: [
-           "node"
-        ]
+# To get the metrics through CAT apis
+catEndPoints:
+  - endPoint: "/_cat/health?v&h=cluster,st,nodeTotal,nodeData,shardsTotal,shardsPrimary,shardsRelocating,shardsInitializing,shardsUnassigned,pendingTasks"
+    metricPrefix: "Cluster Stats"
+    metricKeys: [
+       "cluster"
+    ]
 
-      - endPoint: "/_cat/indices?v&bytes=b&time=s&h=index,health,status,shardsPrimary,shardsReplica,docsCount,docsDeleted,storeSize,pri.store.size,searchQueryTime,searchQueryTotal,searchQueryCurrent,searchFetchTotal,searchFetchTime,searchFetchCurrent,indexingIndexTotal,indexingIndexTime"
-        metricPrefix: "Indices"
-        metricKeys: [
-           "index"
-        ]
+  - endPoint: "/_cat/allocation?v&bytes=b&h=node,shards,diskUsed,diskAvailable,diskTotal,diskPercent"
+    # Any prefixes
+    metricPrefix: "Allocation"
+    # The keys to be used in metric path. Picks up in the same order.
+    metricKeys: [
+       "node"
+    ]
 
-      - endPoint: "/_cat/recovery?v&bytes=b&h=index,shard,files,files_percent,bytes,bytes_percent"
-        metricPrefix: "Recovery"
-        metricKeys: [
-           "index"
-        ]
+  - endPoint: "/_cat/indices?v&bytes=b&time=s&h=index,health,status,shardsPrimary,shardsReplica,docsCount,docsDeleted,storeSize,pri.store.size,searchQueryTime,searchQueryTotal,searchQueryCurrent,searchFetchTotal,searchFetchTime,searchFetchCurrent,indexingIndexTotal,indexingIndexTime"
+    metricPrefix: "Indices"
+    metricKeys: [
+       "index"
+    ]
 
-      - endPoint: "_cat/thread_pool?v&bytes=b&h=host,bulk.active,bulk.size,bulk.queue,bulk.queueSize,bulk.rejected,bulk.largest,bulk.completed,bulk.min,bulk.max"
-        metricPrefix: "ThreadPool"
-        metricKeys: [
-          "host"
-        ]
+  - endPoint: "/_cat/recovery?v&bytes=b&h=index,shard,files,files_percent,bytes,bytes_percent"
+    metricPrefix: "Recovery"
+    metricKeys: [
+       "index"
+    ]
 
-      - endPoint: "/_cat/shards?v&bytes=b&h=node,index,shard,docs,store"
-        metricPrefix: "Shards"
-        metricKeys: [
-           "node",
-           "index"
-        ]
+  - endPoint: "_cat/thread_pool?v&bytes=b&h=host,bulk.active,bulk.size,bulk.queue,bulk.queueSize,bulk.rejected,bulk.largest,bulk.completed,bulk.min,bulk.max"
+    metricPrefix: "ThreadPool"
+    metricKeys: [
+      "host"
+    ]
+
+  - endPoint: "/_cat/shards?v&bytes=b&h=node,index,shard,docs,store"
+    metricPrefix: "Shards"
+    metricKeys: [
+      "node",
+      "index"
+    ]
 
 connection:
   socketTimeout: 2000

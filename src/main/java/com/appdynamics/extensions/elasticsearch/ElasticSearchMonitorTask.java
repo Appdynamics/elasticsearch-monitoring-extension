@@ -18,10 +18,12 @@ public class ElasticSearchMonitorTask implements Runnable{
 
     private Map server;
     private MonitorConfiguration configuration;
+    private List<Map> catEndPoints;
 
-    public ElasticSearchMonitorTask(MonitorConfiguration configuration, Map server) {
+    public ElasticSearchMonitorTask(MonitorConfiguration configuration, Map server, List<Map> catEndPoints) {
         this.configuration = configuration;
         this.server = server;
+        this.catEndPoints = catEndPoints;
     }
 
     public void run() {
@@ -44,7 +46,6 @@ public class ElasticSearchMonitorTask implements Runnable{
     }
 
     private void fetchMetrics(String displayName) {
-        List<Map> catEndPoints = (List) server.get("catEndPoints");
         if (catEndPoints != null && !catEndPoints.isEmpty()) {
             CatMetricsClient catMetricsClient = new CatMetricsClient();
             Map<String,String> metrics = Maps.newHashMap();

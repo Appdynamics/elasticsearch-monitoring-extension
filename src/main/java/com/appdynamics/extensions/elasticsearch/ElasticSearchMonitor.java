@@ -64,7 +64,6 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 		configuration.executeTask();
 		logger.info("ElasticSearch monitor run completed successfully.");
 		return new TaskOutput("Elastic Search monitor run completed successfully.");
-
 	}
 
 
@@ -86,9 +85,10 @@ public class ElasticSearchMonitor extends AManagedMonitor {
 			Map<String, ?> config = configuration.getConfigYml();
 			if(config != null) {
 				List<Map> servers = (List) config.get("servers");
+				List<Map> catEndPoints = (List) config.get("catEndPoints");
 				if(servers != null && !servers.isEmpty()) {
 					for (Map server : servers) {
-						ElasticSearchMonitorTask task = new ElasticSearchMonitorTask(configuration, server);
+						ElasticSearchMonitorTask task = new ElasticSearchMonitorTask(configuration, server, catEndPoints);
 						configuration.getExecutorService().execute(task);
 					}
 				} else {
