@@ -1,5 +1,7 @@
 package com.appdynamics.extensions.elasticsearch;
 
+import com.appdynamics.extensions.AMonitorTaskRunnable;
+import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorConfiguration;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.http.UrlBuilder;
@@ -7,23 +9,24 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import org.apache.log4j.Logger;
-
 import java.util.List;
 import java.util.Map;
 
 
-public class ElasticSearchMonitorTask implements Runnable{
+public class ElasticSearchMonitorTask implements AMonitorTaskRunnable{
+
     private static final Logger logger = Logger.getLogger(ElasticSearchMonitorTask.class);
     private static final String METRIC_SEPARATOR = "|";
-
-    private Map server;
     private MonitorConfiguration configuration;
+    private Map server;
     private List<Map> catEndPoints;
+    private MetricWriteHelper metricWriteHelper;
 
-    public ElasticSearchMonitorTask(MonitorConfiguration configuration, Map server, List<Map> catEndPoints) {
+    public ElasticSearchMonitorTask(MonitorConfiguration configuration, Map server, List<Map> catEndPoints, MetricWriteHelper metricWriteHelper) {
         this.configuration = configuration;
         this.server = server;
         this.catEndPoints = catEndPoints;
+        this.metricWriteHelper = metricWriteHelper;
     }
 
     public void run() {
@@ -37,7 +40,7 @@ public class ElasticSearchMonitorTask implements Runnable{
         } catch (Exception e) {
             String msg = "Exception while running the Elastic Search task in the server " + displayName;
             logger.error(msg, e);
-            configuration.getMetricWriter().registerError(msg, e);
+            metricWriteHelper.registerError(msg, e);
         } finally {
             long endTime = System.currentTimeMillis() - startTime;
             logger.debug("Elastic Search monitor thread for server " + displayName + " ended. Time taken is " + endTime);
@@ -82,9 +85,13 @@ public class ElasticSearchMonitorTask implements Runnable{
     public void printMetric(String metricName, String metricValue) {
         if (metricValue != null) {
             //logger.debug(metricName + " : " + metricValue);
-            configuration.getMetricWriter().printMetric(metricName, metricValue, MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE,MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE, MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
+            metricWriteHelper.printMetric(metricName, metricValue, MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE,MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE, MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
         } else {
             logger.warn("The metric at " + metricName + " is null");
         }
+    }
+
+    public void onTaskComplete() {
+
     }
 }
