@@ -88,7 +88,8 @@ public class ElasticSearchMonitorTask implements Runnable{
 
     public void printMetric(String metricName, String metricValue) {
         if (metricValue != null) {
-            //logger.debug(metricName + " : " + metricValue);
+            // logger.debug(metricName + " : " + metricValue);
+            metricName = metricName.replace(",", "_"); // There can be commas on the shards names that break the extension
             configuration.getMetricWriter().printMetric(metricName, metricValue, MetricWriter.METRIC_AGGREGATION_TYPE_AVERAGE,MetricWriter.METRIC_TIME_ROLLUP_TYPE_AVERAGE, MetricWriter.METRIC_CLUSTER_ROLLUP_TYPE_COLLECTIVE);
         } else {
             logger.warn("The metric at " + metricName + " is null");
