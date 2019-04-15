@@ -20,7 +20,7 @@ public class ElasticSearchMonitorTest {
 
     @Test
     public void testElasticSearchMonitorExtension() throws TaskExecutionException {
-        ElasticSearchMonitor elasticMonitor = new ElasticSearchMonitor();
+        ElasticsearchMonitor elasticMonitor = new ElasticsearchMonitor();
         Map<String, String> taskArgs = Maps.newHashMap();
         taskArgs.put(CONFIG_ARG, "src/test/resources/conf/config.yml");
         elasticMonitor.execute(taskArgs, null);

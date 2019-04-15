@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.appdynamics.extensions</groupId>
     <artifactId>elasticsearch-monitoring-extension</artifactId>
     <version>3.0.0</version>
     <packaging>jar</packaging>
     <name>elasticsearch-monitoring-extension</name>
-    <url>http://maven.apache.org</url>
+    <description>Monitors Elasticsearch</description>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-        <target.dir>${project.build.directory}/ElasticSearchMonitor</target.dir>
+        <!-- TODO Renamed ElasticSearchMonitor -> ElasticsearchMonitor. Target/Download folder name will change, is this ok?
+              renamed wherever applicable-->
+        <target.name>ElasticsearchMonitor</target.name>
+        <target.dir>${project.build.directory}/${target.name}</target.dir>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.appdynamics</groupId>
@@ -24,29 +29,23 @@
         <dependency>
             <groupId>com.appdynamics</groupId>
             <artifactId>appd-exts-commons</artifactId>
-            <version>1.6.5</version>
-            <!--<version>2.2.0-SNAPSHOT</version>-->
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.3.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.21</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <version>2.2.0</version>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.9.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.9.8</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -61,12 +60,19 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>1.7.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>1.7.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
@@ -75,8 +81,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -104,11 +110,16 @@
                         </goals>
                         <configuration>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Main-Class>com.appdynamics.extensions.workbench.WorkbenchServerLauncher</Main-Class>
-                                        <Implementation-Title>ElasticSearch Monitor v${project.version} Build Date ${maven.build.timestamp}</Implementation-Title>
+                                        <Main-Class>com.appdynamics.extensions.workbench.WorkbenchServerLauncher
+                                        </Main-Class>
+                                        <Implementation-Title>Elasticsearch Monitor v${project.version} Build Date
+                                            ${maven.build.timestamp}
+                                        </Implementation-Title>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -126,18 +137,18 @@
                         <phase>install</phase>
                         <configuration>
                             <target>
-                                <mkdir dir="${target.dir}" />
+                                <mkdir dir="${target.dir}"/>
                                 <copy todir="${target.dir}">
-                                    <fileset dir="src/main/resources/conf" includes="monitor.xml" />
+                                    <fileset dir="src/main/resources/conf" includes="monitor.xml"/>
                                     <fileset dir="src/main/resources/conf" includes="config.yml"/>
-                                    <fileset dir="${project.basedir}" includes="README.md"/>
                                     <fileset dir="${project.basedir}" includes="LICENSE.txt,NOTICE.txt"/>
-                                    <fileset dir="${project.build.directory}" includes="${project.artifactId}.${project.packaging}" />
+                                    <fileset dir="${project.build.directory}"
+                                             includes="${project.artifactId}.${project.packaging}"/>
                                 </copy>
                                 <zip destfile="${target.dir}-${project.version}.zip">
-                                    <zipfileset dir="${target.dir}" filemode="755" prefix="ElasticSearchMonitor/" />
+                                    <zipfileset dir="${target.dir}" filemode="755" prefix="${target.name}/"/>
                                 </zip>
-                                <delete dir="${target.dir}" />
+                                <delete dir="${target.dir}"/>
                             </target>
                         </configuration>
                         <goals>
@@ -160,6 +171,7 @@
             </plugin>
         </plugins>
     </build>
+
     <repositories>
         <repository>
             <id>github-maven-repo</id>
@@ -167,12 +179,10 @@
                 <enabled>true</enabled>
             </releases>
             <snapshots>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
             </snapshots>
             <url>https://github.com/Appdynamics/maven-repo/raw/master/releases</url>
         </repository>
     </repositories>
-    <scm>
-        <connection>scm:git:https://github.com/Appdynamics/elasticsearch-monitoring-extension.git</connection>
-    </scm>
+
 </project>
