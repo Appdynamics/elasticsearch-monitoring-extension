@@ -27,7 +27,4 @@ public class Constants {
     public static final String SERVERS = "servers";
     public static final String DISPLAY_NAME = "displayName";
     public static final String CAT_ENDPOINTS = "catEndpoints";
-//    public static final String ENDPOINT = "endpoint";
-//    public static final String METRIC_KEYS = "metricKeys";
-//    public static final String METRICS = "metrics";
 }

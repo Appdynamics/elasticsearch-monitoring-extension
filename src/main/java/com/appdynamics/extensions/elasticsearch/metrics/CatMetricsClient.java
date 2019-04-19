@@ -5,7 +5,7 @@
  * The copyright notice above does not evidence any actual or intended publication of such source code.
  */
 
-package com.appdynamics.extensions.elasticsearch;
+package com.appdynamics.extensions.elasticsearch.metrics;
 
 
 import com.google.common.base.Splitter;
@@ -20,8 +20,7 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 
-public class CatMetricsClient {
-
+public class CatMetricsClient implements Runnable {
     private static final Logger logger = Logger.getLogger(CatMetricsClient.class);
     public static final String METRIC_PATH_SEPARATOR = "|";
 
@@ -164,5 +163,10 @@ public class CatMetricsClient {
         } else {
             return "0";
         }
+    }
+
+    @Override
+    public void run() {
+
     }
 }

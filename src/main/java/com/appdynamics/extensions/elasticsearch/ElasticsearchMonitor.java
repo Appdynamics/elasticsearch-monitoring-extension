@@ -25,7 +25,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-
 import static com.appdynamics.extensions.elasticsearch.endpoints.CatEndpointsUtil.getCatEndpoints;
 import static com.appdynamics.extensions.elasticsearch.util.Constants.*;
 import static com.appdynamics.extensions.util.AssertUtils.assertNotNull;
@@ -92,7 +91,7 @@ public class ElasticsearchMonitor extends ABaseMonitor {
 //        List<String> metricPathKeys =
 //                catEndpoint.getMetricPathKeys() == null || catEndpoint.getMetricPathKeys().isEmpty() ? null :
 //                        catEndpoint.getMetricPathKeys();
-        assertNotNull(catEndpoint.getMetricPathKeys(), "The metricPathKeys for catEndpoints cannot be null or empty");
+        assertNotNull(catEndpoint.getMetricPathKeys(), "The metricPathKeys for catEndpoints cannot be null");
 //        List<Map<String, ?>> metrics = catEndpoint.getMetrics() == null || catEndpoint.getMetrics().isEmpty() ? null
 //                : catEndpoint.getMetrics();
         assertNotNull(catEndpoint.getMetrics(), "The metrics section cannot be null");

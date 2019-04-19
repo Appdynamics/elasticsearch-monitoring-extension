@@ -23,9 +23,72 @@ catEndpoints:
         aggregationType: ""
         timeRollUpType: ""
         clusterRollUpType: ""
+  - endpoint: "/_cat/nodes?v&"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
+      - name: ""
+        alias: ""
+        aggregationType: ""
+        timeRollUpType: ""
+        clusterRollUpType: ""
+  - endpoint: "/_cat/indices?v&"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
+      - name: ""
+        alias: ""
+        aggregationType: ""
+        timeRollUpType: ""
+        clusterRollUpType: ""
+  - endpoint: "/_cat/health?v&"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
+      - name: ""
+        alias: ""
+        aggregationType: ""
+        timeRollUpType: ""
+        clusterRollUpType: ""
+  - endpoint: "/_cat/nodes?v&"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
+      - name: ""
+        alias: ""
+        aggregationType: ""
+        timeRollUpType: ""
+        clusterRollUpType: ""
+  - endpoint: "/_cat/indices?v&"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
+      - name: ""
+        alias: ""
+        aggregationType: ""
+        timeRollUpType: ""
+        clusterRollUpType: ""
+  - endpoint: "/_cat/health?v&"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
+      - name: ""
+        alias: ""
+        aggregationType: ""
+        timeRollUpType: ""
+        clusterRollUpType: ""
+  - endpoint: "/_cat/nodes?v&"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
+      - name: ""
+        alias: ""
+        aggregationType: ""
+        timeRollUpType: ""
+        clusterRollUpType: ""
 
 encryptionKey: ""
 
 # number of concurrent tasks.
 # This doesn't need to be changed unless many instances are configured
-numberOfThreads: 5
+numberOfThreads: 9

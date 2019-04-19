@@ -20,11 +20,11 @@ import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.elasticsearch.endpoints.CatEndpoint;
 import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
-import com.appdynamics.extensions.metrics.Metric;
 import org.slf4j.Logger;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Phaser;
 
 public class ElasticsearchMonitorTask implements AMonitorTaskRunnable {
     private static final Logger LOGGER = ExtensionsLoggerFactory.getLogger(ElasticsearchMonitorTask.class);
@@ -52,11 +52,17 @@ public class ElasticsearchMonitorTask implements AMonitorTaskRunnable {
     @Override
     public void run() {
         LOGGER.debug("Fetching metrics for the server {}", serverName);
-        List<Metric> metrics = fetchMetrics();
-        metricWriteHelper.transformAndPrintMetrics(metrics);
+        fetchMetrics();
     }
 
-    private List<Metric> fetchMetrics() {
-        return null;
+    private void fetchMetrics() {
+        Phaser phaser = new Phaser();
+        phaser.register();
+        for (CatEndpoint catEndpoint : catEndpoints) {
+            
+        }
+        phaser.arriveAndAwaitAdvance();
+//        responses = catEndpoints.parallelStream().map(catEndpoint -> CatEndpointsUtil.getURI((String) server.get("uri"),
+//                catEndpoint.getEndpoint())).map(uri -> HttpClientUtils.getResponseAsStr(configuration.getContext().getHttpClient(), uri)).map(this::nothingDo).collect(Collectors.toList());
     }
 }
