@@ -14,81 +14,37 @@ servers:
 
 # To get the metrics through CAT apis
 catEndpoints:
-  - endpoint: "/_cat/health?v&"
+  - endpoint: "/_cat/health?v&h=cluster,status,nt,nd,shards,pri,asp"
     displayName: "Cluster Stats"
     metricPathKeys: ["cluster"]
     metrics:
       - name: ""
-        alias: ""
-        aggregationType: ""
-        timeRollUpType: ""
-        clusterRollUpType: ""
-  - endpoint: "/_cat/nodes?v&"
-    displayName: "Cluster Stats"
-    metricPathKeys: ["cluster"]
-    metrics:
-      - name: ""
-        alias: ""
-        aggregationType: ""
-        timeRollUpType: ""
-        clusterRollUpType: ""
-  - endpoint: "/_cat/indices?v&"
-    displayName: "Cluster Stats"
-    metricPathKeys: ["cluster"]
-    metrics:
-      - name: ""
-        alias: ""
-        aggregationType: ""
-        timeRollUpType: ""
-        clusterRollUpType: ""
-  - endpoint: "/_cat/health?v&"
-    displayName: "Cluster Stats"
-    metricPathKeys: ["cluster"]
-    metrics:
-      - name: ""
-        alias: ""
-        aggregationType: ""
-        timeRollUpType: ""
-        clusterRollUpType: ""
-  - endpoint: "/_cat/nodes?v&"
-    displayName: "Cluster Stats"
-    metricPathKeys: ["cluster"]
-    metrics:
-      - name: ""
-        alias: ""
-        aggregationType: ""
-        timeRollUpType: ""
-        clusterRollUpType: ""
-  - endpoint: "/_cat/indices?v&"
-    displayName: "Cluster Stats"
-    metricPathKeys: ["cluster"]
-    metrics:
-      - name: ""
-        alias: ""
-        aggregationType: ""
-        timeRollUpType: ""
-        clusterRollUpType: ""
-  - endpoint: "/_cat/health?v&"
-    displayName: "Cluster Stats"
-    metricPathKeys: ["cluster"]
-    metrics:
-      - name: ""
-        alias: ""
-        aggregationType: ""
-        timeRollUpType: ""
-        clusterRollUpType: ""
-  - endpoint: "/_cat/nodes?v&"
-    displayName: "Cluster Stats"
-    metricPathKeys: ["cluster"]
-    metrics:
-      - name: ""
-        alias: ""
-        aggregationType: ""
-        timeRollUpType: ""
-        clusterRollUpType: ""
+        properties:
+          alias: ""
+          aggregationType: ""
+          timeRollUpType: ""
+          clusterRollUpType: ""
+#  - endpoint: "/_cat/nodes?v&"
+#    displayName: "Cluster Stats"
+#    metricPathKeys: ["cluster"]
+#    metrics:
+#      - name: ""
+#        alias: ""
+#        aggregationType: ""
+#        timeRollUpType: ""
+#        clusterRollUpType: ""
+#  - endpoint: "/_cat/indices?v&"
+#    displayName: "Cluster Stats"
+#    metricPathKeys: ["cluster"]
+#    metrics:
+#      - name: ""
+#        alias: ""
+#        aggregationType: ""
+#        timeRollUpType: ""
+#        clusterRollUpType: ""
 
 encryptionKey: ""
 
-# number of concurrent tasks.
-# This doesn't need to be changed unless many instances are configured
-numberOfThreads: 9
+# numberOfThreads = (number of catEndpoints + 1) * number of servers
+# Example if 5 catEndpoints are configured for 3 servers then numberOfThreads = (5 + 1) * 3 = 18
+numberOfThreads: 5

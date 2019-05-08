@@ -23,9 +23,8 @@ import java.util.Map;
 /**
  * @author pradeep.nair
  */
-// TODO should I use this? and should I check for all the config correctly?
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class CatEndpoint {
+public class CatEndpoint {
     private String endpoint;
     private String displayName;
     private List<String> metricPathKeys;

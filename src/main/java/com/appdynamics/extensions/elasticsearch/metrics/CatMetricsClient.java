@@ -7,166 +7,143 @@
 
 package com.appdynamics.extensions.elasticsearch.metrics;
 
-
-import com.google.common.base.Splitter;
+import com.appdynamics.extensions.MetricWriteHelper;
+import com.appdynamics.extensions.elasticsearch.endpoints.CatEndpoint;
+import com.appdynamics.extensions.elasticsearch.endpoints.CatEndpointsUtil;
+import com.appdynamics.extensions.elasticsearch.util.LineUtils;
+import com.appdynamics.extensions.http.HttpClientUtils;
+import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
+import com.appdynamics.extensions.metrics.Metric;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.io.LineReader;
-import org.apache.log4j.Logger;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
+
+import static com.appdynamics.extensions.elasticsearch.util.Constants.NAME;
+import static com.appdynamics.extensions.elasticsearch.util.Constants.PROPERTIES;
 
 public class CatMetricsClient implements Runnable {
-    private static final Logger logger = Logger.getLogger(CatMetricsClient.class);
-    public static final String METRIC_PATH_SEPARATOR = "|";
+    private static final Logger LOGGER = ExtensionsLoggerFactory.getLogger(CatMetricsClient.class);
 
-    public Map<String,String> extractMetrics(String payload,List<String> metricKeys,String metricPrefix){
-        Map<String,String> metricsMap = Maps.newHashMap();
-        try {
-            LineReader reader = new LineReader(new StringReader(payload));
-            List<String> headers = parseALine(reader.readLine());
-            List<Integer> keyOffsets = getMetricKeyOffsets(headers, metricKeys);
-            String line = "";
-            while((line = reader.readLine()) != null){
-                List<String> metrics = parseALine(line);
-                extractMetricKeyValue(metricsMap, headers, keyOffsets, metrics,metricPrefix);
-            }
+    private static final Pattern pattern = Pattern.compile("b|kb|mb|gb|tb|pd|ms|s|m|h|%",
+            Pattern.CASE_INSENSITIVE);
+    private final String metricPrefix;
+    private final String uri;
+    private final Phaser phaser;
+    private final AtomicBoolean heartBeat;
+    private final CloseableHttpClient httpClient;
+    private final MetricWriteHelper metricWriteHelper;
+    private final CatEndpoint catEndpoint;
 
-        } catch (IOException e) {
-            logger.error("Error in extracting metrics " + e);
-        }
-        return metricsMap;
-    }
-
-    private void extractMetricKeyValue(Map<String, String> metricsMap, List<String> headers, List<Integer> keyOffsets, List<String> metrics, String metricPrefix) {
-        String metricKeyPrefix = buildMetricKeyPrefix(metrics,keyOffsets,metricPrefix);
-        String[] metricTokens = metrics.toArray(new String[metrics.size()]);
-        for(int tokenIndex=0; tokenIndex < metricTokens.length; tokenIndex++){
-            if(keyOffsets.isEmpty()){
-               logger.error("Metric Key was not found. Please check the configuration.");
-                break;
-            }
-            if(!keyOffsets.contains(tokenIndex)){
-                String metricKey = metricKeyPrefix + headers.get(tokenIndex);
-                String metricValue = metricTokens[tokenIndex];
-                if(metricKey.endsWith("_percent")) {
-                    if (metricValue != null && metricValue.length() > 0 && metricValue.charAt(metricValue.length()-1)=='%') {
-                        metricValue = String.valueOf(Math.round(Double.parseDouble(metricValue.substring(0, metricValue.length()-1))));
-                    }
-                }
-                else if(metricKey.endsWith("health")) {
-                    metricValue = defineIndexHealth(metricValue);
-                }
-                else if(metricKey.endsWith("status")) {
-                    metricValue = defineIndexStatus(metricValue);
-                }
-                // deal with Cluster Status Metric
-                else if(metricKey.endsWith("st")) {
-                    metricKey = metricKey.substring(0, metricKey.length() - 2) + "status";
-                    metricValue = defineIndexHealth(metricValue);
-                }
-                if(isMetricValueValid(metricValue)) {
-                    metricsMap.put(metricKey, metricValue);
-                }
-                else{
-                    logger.warn("Invalid Metric with MetricKey::" + metricKey + " and MetricValue::" + metricValue);
-                }
-            }
-        }
-    }
-
-    private boolean isMetricValueValid(Object metricValue) {
-        if(metricValue == null){
-            return false;
-        }
-        if(metricValue instanceof String){
-            try {
-                Double.valueOf((String) metricValue);
-                return true;
-            }
-            catch(NumberFormatException nfe){
-                //logger.warn("Metric Value is invalid " + nfe);
-            }
-        }
-        else if(metricValue instanceof Number){
-            return true;
-        }
-        return false;
-    }
-
-    private String buildMetricKeyPrefix(List<String> tokens, List<Integer> keyOffsets,String metricPrefix) {
-        StringBuilder prefixBuilder = new StringBuilder();
-        for(int offset : keyOffsets){
-            if (!Strings.isNullOrEmpty(metricPrefix)) {
-                prefixBuilder.append(metricPrefix);
-                prefixBuilder.append(METRIC_PATH_SEPARATOR);
-            }
-            prefixBuilder.append(tokens.get(offset));
-            prefixBuilder.append(METRIC_PATH_SEPARATOR);
-        }
-        return prefixBuilder.toString();
-    }
-
-    private List<Integer> getMetricKeyOffsets(List<String> headers, List<String> metricKeys) {
-        if(metricKeys.isEmpty()){
-            return Lists.newArrayList();
-        }
-        List<Integer> keyOffsets = Lists.newArrayList();
-        for(String key:metricKeys){
-            if(headers.contains(key)){
-                keyOffsets.add(headers.indexOf(key));
-            }
-        }
-        return keyOffsets;
-    }
-
-    public List<String> parseALine(String line) {
-        Splitter spaceSplitter = Splitter.on(" ")
-                .omitEmptyStrings()
-                .trimResults();
-        List<String> tokens = Lists.newArrayList();
-        for(String str : spaceSplitter.split(line)){
-            tokens.add(str);
-        }
-        return tokens;
-    }
-
-    /**
-     * Assigns an integer value to show the index health in AppDynamics
-     * controller green -> 2 yellow -> 1 red -> 0
-     *
-     * @param health
-     *            Status string (green, yellow, or red)
-     * @return corresponding string value (2, 1, or 0)
-     */
-    private String defineIndexHealth(String health) {
-        if (health.equals("green")) {
-            return "2";
-        } else if (health.equals("yellow")) {
-            return "1";
-        } else {
-            return "0";
-        }
-    }
-
-    /**
-     * Assigns an integer value to show the index status in AppDynamics
-     * controller open -> 1 close -> 0
-     */
-    private String defineIndexStatus(String status) {
-        if (status.equals("open")) {
-            return "1";
-        } else {
-            return "0";
-        }
+    public CatMetricsClient(String metricPrefix, String uri, Phaser phaser, AtomicBoolean heartBeat,
+                            CloseableHttpClient httpClient, MetricWriteHelper metricWriteHelper,
+                            CatEndpoint catEndpoint) {
+        this.metricPrefix = metricPrefix;
+        this.uri = uri;
+        this.heartBeat = heartBeat;
+        this.httpClient = httpClient;
+        this.metricWriteHelper = metricWriteHelper;
+        this.catEndpoint = catEndpoint;
+        this.phaser = phaser;
+        phaser.register();
     }
 
     @Override
     public void run() {
+        String url = CatEndpointsUtil.getURL(uri, catEndpoint.getEndpoint());
+        LOGGER.debug("Url formed is {}", url);
+        List<String> response = getResponse(url);
+        if (response != null) {
+            List<Metric> metrics = fetchMetricsFromResponse(response);
+            if (metrics.isEmpty()) {
+                LOGGER.debug("No metrics retrieved from endpoint {}", catEndpoint.getEndpoint());
+            } else {
+                metricWriteHelper.transformAndPrintMetrics(metrics);
+            }
+        }
+        phaser.arriveAndDeregister();
+    }
 
+    private List<String> getResponse(String url) {
+        List<String> response = HttpClientUtils.getResponseAsLines(httpClient, url);
+        if (response == null) {
+            LOGGER.error("Response form endpoint {} is null", catEndpoint.getEndpoint());
+            return null;
+        }
+        heartBeat.compareAndSet(false, true);
+        if (response.isEmpty() || response.size() == 1) {
+            LOGGER.error("Response from endpoint {} is empty", catEndpoint.getEndpoint());
+            return null;
+        }
+        return response;
+    }
+
+    private List<Metric> fetchMetricsFromResponse(List<String> response) {
+        List<Metric> metrics = new ArrayList<>();
+        String headerLine = response.remove(0);
+        List<List<String>> _2DResponseList = LineUtils.to2DList(response);
+        LOGGER.debug("Header line from endpoint {} is {}", catEndpoint.getEndpoint(), headerLine);
+        Map<String, Integer> headerInvertedIndex = LineUtils.getInvertedIndex(headerLine);
+        List<String> metricPathKeys = catEndpoint.getMetricPathKeys();
+        List<Integer> keyOffsets = LineUtils.getMetricKeyOffsets(headerInvertedIndex, metricPathKeys);
+        if (keyOffsets.size() != catEndpoint.getMetricPathKeys().size()) {
+            LOGGER.error("Could not find all keys {} in header {} for endpoint {}. Check configuration.",
+                    metricPathKeys, headerLine, catEndpoint.getEndpoint());
+            return metrics;
+        }
+        for (List<String> line : _2DResponseList) {
+            LinkedList<String> metricTokens = LineUtils.getMetricTokensFromOffsets(line, keyOffsets);
+            List<Metric> metricsFromLine = getConfiguredMetricsFromLine(headerInvertedIndex, line, metricTokens);
+            if (metricsFromLine == null) {
+                return new ArrayList<>();
+            } else {
+                metrics.addAll(metricsFromLine);
+            }
+        }
+        return metrics;
+    }
+
+    private List<Metric> getConfiguredMetricsFromLine(Map<String, Integer> headerInvertedIndex, List<String> line,
+                                                      LinkedList<String> metricTokens) {
+        List<Metric> metrics = new ArrayList<>();
+        for (Map<String, ?> metricsConfigured : catEndpoint.getMetrics()) {
+            String metricNameConfigured = (String) metricsConfigured.get(NAME);
+            Map<String, ?> metricProperties = (Map<String, ?>) metricsConfigured.get(PROPERTIES);
+            int metricIndex = headerInvertedIndex.getOrDefault(metricNameConfigured, -1);
+            if (!Strings.isNullOrEmpty(metricNameConfigured) && metricIndex != -1) {
+                String metricValue = dropTrailingUnits(line.get(metricIndex));
+                metricTokens.add(metricNameConfigured);
+                String[] tokens = metricTokens.toArray(new String[0]);
+                metricTokens.removeLast();
+                Metric metric;
+                if (metricProperties == null || metricProperties.size() == 0) {
+                    LOGGER.debug("Creating metric with default properties name {}, value {}, prefix {}, tokens {}",
+                            metricNameConfigured, metricValue, metricPrefix, tokens);
+                    metric = new Metric(metricNameConfigured, metricValue, metricPrefix, tokens);
+                } else {
+                    LOGGER.debug("Creating metric name {}, value {}, prefix {}, tokens {}, properties {}",
+                            metricNameConfigured
+                            , metricValue, metricPrefix, tokens, metricNameConfigured);
+                    metric = new Metric(metricNameConfigured, metricValue, metricProperties, metricPrefix, tokens);
+                }
+                metrics.add(metric);
+            } else {
+                LOGGER.error("The metric is not configured correctly. Skipping metrics collection for endpoint {}",
+                        catEndpoint.getEndpoint());
+                return null;
+            }
+        }
+        return metrics;
+    }
+
+    private String dropTrailingUnits(String metricValue) {
+        return pattern.matcher(metricValue).replaceAll("");
     }
 }

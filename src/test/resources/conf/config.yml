@@ -1,64 +1,57 @@
 ### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
+# This will create this metric in all the tiers, under this path.
+#metricPrefix: "Custom Metrics|Elasticsearch"
 
-#This will create it in specific Tier/Component. Make sure to replace <COMPONENT_ID> with the appropriate one
-#from your environment. To find the <COMPONENT_ID> in your environment, please follow the screenshot in
-#https://docs.appdynamics.com/display/PRO42/Build+a+Monitoring+Extension+Using+Java
-
-metricPrefix: Server|Component:<COMPONENT_ID>|Custom Metrics|Elastic Search
+# This will create it in specific Tier aka Component. Replace <COMPONENT_ID>.
+metricPrefix: "Server|Component:<ComponentID>|Custom Metrics|Elasticsearch"
 
 servers:
   - displayName: Server1
     uri: "http://localhost:9200"
     username: ""
     password: ""
+    encryptedPassword: ""
 
 # To get the metrics through CAT apis
-catEndPoints:
-  - endPoint: "/_cat/health?v&h=cluster,st,nodeTotal,nodeData,shardsTotal,shardsPrimary,shardsRelocating,shardsInitializing,shardsUnassigned,pendingTasks"
-    metricPrefix: "Cluster Stats"
-    metricKeys: [
-       "cluster"
-    ]
+catEndpoints:
+  - endpoint: "/_cat/health?v&h=cluster,status,nt,nd,shards,pri,asp"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
+      - name: "status"
+        properties:
+          alias: "status"
+          aggregationType: "AVERAGE"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+          convert:
+            red: 0
+            yellow: 1
+            green: 2
+      - name: "shards"
+        properties:
+          alias: "shards"
+          aggregationType: "AVERAGE"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "asp"
+        properties:
+          alias: "Active Shards Percent"
+          aggregationType: "AVERAGE"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+  - endpoint: "/_cat/nodes?v&"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
+      - name: ""
+        alias: ""
+        aggregationType: ""
+        timeRollUpType: ""
+        clusterRollUpType: ""
 
-  - endPoint: "/_cat/allocation?v&bytes=b&h=node,shards,diskUsed,diskAvailable,diskTotal,diskPercent"
-    # Any prefixes
-    metricPrefix: "Allocation"
-    # The keys to be used in metric path. Picks up in the same order.
-    metricKeys: [
-       "node"
-    ]
-
-  - endPoint: "/_cat/indices?v&bytes=b&time=s&h=index,health,status,shardsPrimary,shardsReplica,docsCount,docsDeleted,storeSize,pri.store.size,searchQueryTime,searchQueryTotal,searchQueryCurrent,searchFetchTotal,searchFetchTime,searchFetchCurrent,indexingIndexTotal,indexingIndexTime"
-    metricPrefix: "Indices"
-    metricKeys: [
-       "index"
-    ]
-
-  - endPoint: "/_cat/recovery?v&bytes=b&h=index,shard,files,files_percent,bytes,bytes_percent"
-    metricPrefix: "Recovery"
-    metricKeys: [
-       "index"
-    ]
-
-  - endPoint: "_cat/thread_pool?v&bytes=b&h=host,bulk.active,bulk.size,bulk.queue,bulk.queueSize,bulk.rejected,bulk.largest,bulk.completed,bulk.min,bulk.max"
-    metricPrefix: "ThreadPool"
-    metricKeys: [
-      "host"
-    ]
-
-  - endPoint: "/_cat/shards?v&bytes=b&h=node,index,shard,docs,store"
-    metricPrefix: "Shards"
-    metricKeys: [
-      "node",
-      "index"
-    ]
-
-connection:
-  socketTimeout: 2000
-  connectTimeout: 2000
-
+encryptionKey: ""
 
 # number of concurrent tasks.
 # This doesn't need to be changed unless many instances are configured
 numberOfThreads: 5
-

@@ -19,12 +19,18 @@ import com.appdynamics.extensions.AMonitorTaskRunnable;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
 import com.appdynamics.extensions.elasticsearch.endpoints.CatEndpoint;
+import com.appdynamics.extensions.elasticsearch.metrics.CatMetricsClient;
 import com.appdynamics.extensions.logging.ExtensionsLoggerFactory;
+import com.appdynamics.extensions.metrics.Metric;
+import com.appdynamics.extensions.util.MetricPathUtils;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ElasticsearchMonitorTask implements AMonitorTaskRunnable {
     private static final Logger LOGGER = ExtensionsLoggerFactory.getLogger(ElasticsearchMonitorTask.class);
@@ -52,17 +58,35 @@ public class ElasticsearchMonitorTask implements AMonitorTaskRunnable {
     @Override
     public void run() {
         LOGGER.debug("Fetching metrics for the server {}", serverName);
-        fetchMetrics();
+        // TODO test whether heart beat is printed
+        boolean heart_beat = spawnCatMetricsClientTasks();
+        printHeartBeat(heart_beat);
     }
 
-    private void fetchMetrics() {
+    private void printHeartBeat(boolean heart_beat) {
+        List<Metric> metrics = new ArrayList<>();
+        String metricName = "HEART_BEAT";
+        String metricValue = heart_beat ? "1" : "0";
+        Metric metric = new Metric(metricName, metricValue, configuration.getMetricPrefix(), serverName, metricName);
+        metrics.add(metric);
+        metricWriteHelper.transformAndPrintMetrics(metrics);
+    }
+
+    private boolean spawnCatMetricsClientTasks() {
         Phaser phaser = new Phaser();
         phaser.register();
-        for (CatEndpoint catEndpoint : catEndpoints) {
-            
-        }
+        String metricPrefix = MetricPathUtils.buildMetricPath(configuration.getMetricPrefix(), serverName);
+        String uri = (String) server.get("uri");
+        // use this across multiple threads to check if server is up, if any one thread is able to make a connection
+        // to the server heartbeat will be updated to true
+        AtomicBoolean heartBeat = new AtomicBoolean();
+        CloseableHttpClient httpClient = configuration.getContext().getHttpClient();
+        catEndpoints.forEach(catEndpoint -> {
+            CatMetricsClient catMetricsClientTask = new CatMetricsClient(metricPrefix, uri, phaser, heartBeat,
+                    httpClient, metricWriteHelper, catEndpoint);
+            configuration.getContext().getExecutorService().execute(catEndpoint.getDisplayName(), catMetricsClientTask);
+        });
         phaser.arriveAndAwaitAdvance();
-//        responses = catEndpoints.parallelStream().map(catEndpoint -> CatEndpointsUtil.getURI((String) server.get("uri"),
-//                catEndpoint.getEndpoint())).map(uri -> HttpClientUtils.getResponseAsStr(configuration.getContext().getHttpClient(), uri)).map(this::nothingDo).collect(Collectors.toList());
+        return heartBeat.get();
     }
 }

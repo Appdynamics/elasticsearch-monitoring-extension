@@ -16,7 +16,6 @@
 package com.appdynamics.extensions.elasticsearch.endpoints;
 
 import com.appdynamics.extensions.elasticsearch.ElasticsearchMonitor;
-import com.appdynamics.extensions.util.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
@@ -24,17 +23,14 @@ import java.util.List;
 import java.util.Map;
 
 import static com.appdynamics.extensions.elasticsearch.util.Constants.CAT_ENDPOINTS;
+import static com.appdynamics.extensions.util.StringUtils.trimLeading;
+import static com.appdynamics.extensions.util.StringUtils.trimTrailing;
 
 /**
  * @author pradeep.nair
  */
 public class CatEndpointsUtil {
 
-    /**
-     *
-     * @param endpoints
-     * @return
-     */
     public static List<CatEndpoint> getCatEndpoints(List<Map<String, ?>> endpoints) {
         final ObjectMapper mapper = ElasticsearchMonitor.getObjectMapper();
         final Map<String, List<Map<String, ?>>> catEndpointsMap = new HashMap<>();
@@ -43,8 +39,10 @@ public class CatEndpointsUtil {
         return catEndpoints.getCatEndpoints();
     }
 
-    public static String getURI(String host, String endpoint) {
+    public static String getURL(String uri, String endpoint) {
         final String slash = "/";
-        return StringUtils.trimTrailing(host, slash) + slash + StringUtils.trimLeading(endpoint, slash);
+        final String verbose = "&v";
+        final String format = "&format=text";
+        return trimTrailing(uri, slash) + slash + trimLeading(endpoint, slash) + verbose + format;
     }
 }
