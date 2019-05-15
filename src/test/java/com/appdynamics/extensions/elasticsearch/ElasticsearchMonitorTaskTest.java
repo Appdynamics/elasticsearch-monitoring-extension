@@ -105,5 +105,4 @@ public class ElasticsearchMonitorTaskTest {
         assertThat(metrics.size(), is(1));
         assertThat(metrics.get(0).getMetricPath(), is(equalTo("Custom Metrics|Elasticsearch|Cluster1|HEART_BEAT")));
     }
-
 }

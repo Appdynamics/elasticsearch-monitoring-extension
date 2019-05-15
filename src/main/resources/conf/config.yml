@@ -18,33 +18,41 @@ catEndpoints:
     displayName: "Cluster Stats"
     metricPathKeys: ["cluster"]
     metrics:
+      - name: "status"
+        properties:
+          alias: "status"
+          aggregationType: "AVERAGE"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+          convert:
+            red: 0
+            yellow: 1
+            green: 2
+      - name: "shards"
+        properties:
+          alias: "shards"
+          aggregationType: "AVERAGE"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "asp"
+        properties:
+          alias: "Active Shards Percent"
+          aggregationType: "AVERAGE"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+  - endpoint: "/_cat/nodes?v&"
+    displayName: "Cluster Stats"
+    metricPathKeys: ["cluster"]
+    metrics:
       - name: ""
         properties:
           alias: ""
           aggregationType: ""
           timeRollUpType: ""
           clusterRollUpType: ""
-#  - endpoint: "/_cat/nodes?v&"
-#    displayName: "Cluster Stats"
-#    metricPathKeys: ["cluster"]
-#    metrics:
-#      - name: ""
-#        alias: ""
-#        aggregationType: ""
-#        timeRollUpType: ""
-#        clusterRollUpType: ""
-#  - endpoint: "/_cat/indices?v&"
-#    displayName: "Cluster Stats"
-#    metricPathKeys: ["cluster"]
-#    metrics:
-#      - name: ""
-#        alias: ""
-#        aggregationType: ""
-#        timeRollUpType: ""
-#        clusterRollUpType: ""
 
 encryptionKey: ""
 
-# numberOfThreads = (number of catEndpoints + 1) * number of servers
-# Example if 5 catEndpoints are configured for 3 servers then numberOfThreads = (5 + 1) * 3 = 18
+# number of concurrent tasks.
+# This doesn't need to be changed unless many instances are configured
 numberOfThreads: 5

@@ -45,10 +45,11 @@ catEndpoints:
     metricPathKeys: ["cluster"]
     metrics:
       - name: ""
-        alias: ""
-        aggregationType: ""
-        timeRollUpType: ""
-        clusterRollUpType: ""
+        properties:
+          alias: ""
+          aggregationType: ""
+          timeRollUpType: ""
+          clusterRollUpType: ""
 
 encryptionKey: ""
 
