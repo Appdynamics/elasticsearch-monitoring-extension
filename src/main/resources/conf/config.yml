@@ -14,42 +14,311 @@ servers:
 
 # To get the metrics through CAT apis
 catEndpoints:
-  - endpoint: "/_cat/health?v&h=cluster,status,nt,nd,shards,pri,asp"
+  # shard allocation stats
+  - endpoint: "/_cat/allocation?v&bytes=b"
+    displayName: "Allocations"
+    metricPathKeys: ["node"]
+    metrics:
+      - name: "shards"
+        properties:
+          alias: "Total Number of Shards"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "disk.indices"
+        properties:
+          alias: "Disk Stats|Indices"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "disk.used"
+        properties:
+          alias: "Disk Stats|Used"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "disk.avail"
+        properties:
+          alias: "Disk Stats|Available"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "disk.total"
+        properties:
+          alias: "Disk Stats|Total"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "disk.percent"
+        properties:
+          alias: "Disk Stats|Percent Used"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+  # cluster doc count
+  - endpoint: "/_cat/count?v"
+    displayName: "Cluster Stats"
+    metricPathKeys: []
+    metrics:
+      - name: "count"
+        properties:
+          alias: "Number of documents"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+  # cluster health stats
+  - endpoint: "/_cat/health?v&ts=false"
     displayName: "Cluster Stats"
     metricPathKeys: ["cluster"]
     metrics:
       - name: "status"
         properties:
-          alias: "status"
-          aggregationType: "AVERAGE"
+          alias: "Status"
+          aggregationType: "OBSERVATION"
           timeRollUpType: "AVERAGE"
           clusterRollUpType: "INDIVIDUAL"
           convert:
             red: 0
             yellow: 1
             green: 2
+      - name: "node.total"
+        properties:
+          alias: "Nodes (count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
       - name: "shards"
         properties:
-          alias: "shards"
-          aggregationType: "AVERAGE"
+          alias: "Shards (count)"
+          aggregationType: "OBSERVATION"
           timeRollUpType: "AVERAGE"
           clusterRollUpType: "INDIVIDUAL"
-      - name: "asp"
+      - name: "pri"
         properties:
-          alias: "Active Shards Percent"
-          aggregationType: "AVERAGE"
+          alias: "Primary shards (count)"
+          aggregationType: "OBSERVATION"
           timeRollUpType: "AVERAGE"
           clusterRollUpType: "INDIVIDUAL"
-  - endpoint: "/_cat/nodes?v&"
-    displayName: "Cluster Stats"
-    metricPathKeys: ["cluster"]
+      - name: "relo"
+        properties:
+          alias: "Relocating shards (count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "init"
+        properties:
+          alias: "Initializing shards (count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "unassign"
+        properties:
+          alias: "Unassigned shards (count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "pending_tasks"
+        properties:
+          alias: "Pending Tasks (count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "max_task_wait_time"
+        properties:
+          alias: "Maximum wait time (millis)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "active_shards_percent"
+        properties:
+          alias: "Active shards percent"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+  # indices stats
+  - endpoint: "/_cat/indices?v&bytes=b"
+    displayName: "Indices Stats"
+    metricPathKeys: ["index"]
     metrics:
-      - name: ""
+      - name: "health"
         properties:
-          alias: ""
-          aggregationType: ""
-          timeRollUpType: ""
-          clusterRollUpType: ""
+          alias: "Health"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+          convert:
+            red: 0
+            yellow: 1
+            green: 2
+      - name: "status"
+        properties:
+          alias: "Status"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+          convert:
+            close: 0
+            open: 1
+      - name: "pri"
+        properties:
+          alias: "Primaries (count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "rep"
+        properties:
+          alias: "Replicas (count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "docs.count"
+        properties:
+          alias: "Number of documents"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "docs.deleted"
+        properties:
+          alias: "Deleted documents (count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "store.size"
+        properties:
+          alias: "Store size"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "pri.store.size"
+        properties:
+          alias: "Primary store size"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+  # node stats
+  - endpoint: "/_cat/nodes?v&h=heap.percent,ram.percent,cpu,load_1m,name"
+    displayName: "Node Stats"
+    metricPathKeys: ["name"]
+    metrics:
+      - name: "heap.percent"
+        properties:
+          alias: "Heap Usage (Percent)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "ram.percent"
+        properties:
+          alias: "Ram Usage (Percent)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "cpu"
+        properties:
+          alias: "CPU Usage (percent)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "load_1m"
+        properties:
+          alias: "One-minute load average"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+  # recovery stats
+  - endpoint: "/_cat/recovery?v"
+    displayName: "Recovery Stats"
+    metricPathKeys: ["index", "shard"]
+    metrics:
+      - name: "time"
+        properties:
+          alias: "Time (millis)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "type"
+        properties:
+          alias: "Recovery Type"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+          convert:
+            store: 1
+            existing_store: 1
+            snapshot: 2
+            replica: 3
+            relocating: 4
+      - name: "stage"
+        properties:
+          alias: "Recovery stage"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+          convert:
+            init: 0
+            index: 1
+            start: 2
+            translog: 3
+            finalize: 4
+            done: 5
+      - name: "files_total"
+        properties:
+          alias: "Total files (Count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "files_recovered"
+        properties:
+          alias: "Recovered files (Count)"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "files_percent"
+        properties:
+          alias: "Percent of files recovered"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "bytes_total"
+        properties:
+          alias: "Total bytes"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "bytes_recovered"
+        properties:
+          alias: "Recovered bytes"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "bytes_percent"
+        properties:
+          alias: "Percent of bytes recovered"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+  # thread pool stats
+  - endpoint: "/_cat/thread_pool?v"
+    displayName: "Thread Pool Stats"
+    metricPathKeys: ["name", "node_name"]
+    metrics:
+      - name: "active"
+        properties:
+          alias: "Active Tasks"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "queue"
+        properties:
+          alias: "Queued Tasks"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
+      - name: "rejected"
+        properties:
+          alias: "Rejected Tasks"
+          aggregationType: "OBSERVATION"
+          timeRollUpType: "AVERAGE"
+          clusterRollUpType: "INDIVIDUAL"
 
 encryptionKey: ""
 

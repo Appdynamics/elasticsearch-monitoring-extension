@@ -88,6 +88,7 @@ public class ElasticsearchMonitorTaskTest {
         metricWriteHelper = mock(MetricWriteHelper.class);
         catEndpoint = mock(CatEndpoint.class);
         when(catEndpoint.getEndpoint()).thenReturn(serverName);
+        when(catEndpoint.getDisplayName()).thenReturn("stub");
         CatMetricsClient catMetricsClient = PowerMockito.mock(CatMetricsClient.class);
         PowerMockito.whenNew(CatMetricsClient.class).withAnyArguments().thenReturn(catMetricsClient);
     }

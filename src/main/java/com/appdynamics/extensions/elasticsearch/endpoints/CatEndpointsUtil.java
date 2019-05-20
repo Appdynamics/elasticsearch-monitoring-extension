@@ -41,7 +41,7 @@ public class CatEndpointsUtil {
 
     public static String getURL(String uri, String endpoint) {
         final String slash = "/";
-        final String verbose = "&v";
+        final String verbose = endpoint.contains("?") ? "&v" : "?v";
         final String format = "&format=text";
         return trimTrailing(uri, slash) + slash + trimLeading(endpoint, slash) + verbose + format;
     }

@@ -31,8 +31,10 @@ import static com.appdynamics.extensions.elasticsearch.util.Constants.PROPERTIES
 
 public class CatMetricsClient implements Runnable {
     private static final Logger LOGGER = ExtensionsLoggerFactory.getLogger(CatMetricsClient.class);
+    private static final String UNASSIGNED = "UNASSIGNED";
 
-    private static final Pattern pattern = Pattern.compile("b|kb|mb|gb|tb|pd|ms|s|m|h|%",
+    private int unassigned;
+    private static final Pattern pattern = Pattern.compile("(b|kb|mb|gb|tb|pd|ms|s|m|h|%)$",
             Pattern.CASE_INSENSITIVE);
     private final String metricPrefix;
     private final String uri;
@@ -91,6 +93,7 @@ public class CatMetricsClient implements Runnable {
         List<List<String>> _2DResponseList = LineUtils.to2DList(response);
         LOGGER.debug("Header line from endpoint {} is {}", catEndpoint.getEndpoint(), headerLine);
         Map<String, Integer> headerInvertedIndex = LineUtils.getInvertedIndex(headerLine);
+        int headerSize = headerInvertedIndex.size();
         List<String> metricPathKeys = catEndpoint.getMetricPathKeys();
         List<Integer> keyOffsets = LineUtils.getMetricKeyOffsets(headerInvertedIndex, metricPathKeys);
         if (keyOffsets.size() != catEndpoint.getMetricPathKeys().size()) {
@@ -99,12 +102,25 @@ public class CatMetricsClient implements Runnable {
             return metrics;
         }
         for (List<String> line : _2DResponseList) {
-            LinkedList<String> metricTokens = LineUtils.getMetricTokensFromOffsets(line, keyOffsets);
-            List<Metric> metricsFromLine = getConfiguredMetricsFromLine(headerInvertedIndex, line, metricTokens);
-            if (metricsFromLine == null) {
-                return new ArrayList<>();
+            int currentLineSize = line.size();
+            if (currentLineSize == headerSize) {
+                LinkedList<String> metricTokens = LineUtils.getMetricTokensFromOffsets(line, keyOffsets);
+                List<Metric> metricsFromLine = getConfiguredMetricsFromLine(headerInvertedIndex, line, metricTokens);
+                if (metricsFromLine == null) {
+                    return new ArrayList<>();
+                } else {
+                    metrics.addAll(metricsFromLine);
+                }
             } else {
-                metrics.addAll(metricsFromLine);
+                LOGGER.debug("Current line {} does not have all entries for header {}. Size of line {}, size of " +
+                        "header {}. This could mean that a node or shard is UNASSIGNED ", line, headerLine,
+                        currentLineSize, headerSize);
+                // line size is small so contains should be OK
+                if (line.contains(UNASSIGNED)) {
+                    LOGGER.debug("Found a response line with UNASSIGNED for endpoint {}", catEndpoint.getEndpoint());
+                    Metric metric = new Metric(UNASSIGNED, String.valueOf(unassigned++), metricPrefix, UNASSIGNED);
+                    metrics.add(metric);
+                }
             }
         }
         return metrics;

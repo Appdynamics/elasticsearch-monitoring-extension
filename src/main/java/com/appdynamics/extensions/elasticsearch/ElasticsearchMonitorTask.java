@@ -58,7 +58,6 @@ public class ElasticsearchMonitorTask implements AMonitorTaskRunnable {
     @Override
     public void run() {
         LOGGER.debug("Fetching metrics for the server {}", serverName);
-        // TODO test whether heart beat is printed
         boolean heart_beat = spawnCatMetricsClientTasks();
         printHeartBeat(heart_beat);
     }
@@ -75,13 +74,14 @@ public class ElasticsearchMonitorTask implements AMonitorTaskRunnable {
     private boolean spawnCatMetricsClientTasks() {
         Phaser phaser = new Phaser();
         phaser.register();
-        String metricPrefix = MetricPathUtils.buildMetricPath(configuration.getMetricPrefix(), serverName);
         String uri = (String) server.get("uri");
         // use this across multiple threads to check if server is up, if any one thread is able to make a connection
         // to the server heartbeat will be updated to true
         AtomicBoolean heartBeat = new AtomicBoolean();
         CloseableHttpClient httpClient = configuration.getContext().getHttpClient();
         catEndpoints.forEach(catEndpoint -> {
+            String metricPrefix = MetricPathUtils.buildMetricPath(configuration.getMetricPrefix(), serverName,
+                    catEndpoint.getDisplayName());
             CatMetricsClient catMetricsClientTask = new CatMetricsClient(metricPrefix, uri, phaser, heartBeat,
                     httpClient, metricWriteHelper, catEndpoint);
             configuration.getContext().getExecutorService().execute(catEndpoint.getDisplayName(), catMetricsClientTask);
