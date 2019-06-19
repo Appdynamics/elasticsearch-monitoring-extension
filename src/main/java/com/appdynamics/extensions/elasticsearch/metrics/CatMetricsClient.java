@@ -145,8 +145,7 @@ public class CatMetricsClient implements Runnable {
                     metric = new Metric(metricNameConfigured, metricValue, metricPrefix, tokens);
                 } else {
                     LOGGER.debug("Creating metric name {}, value {}, prefix {}, tokens {}, properties {}",
-                            metricNameConfigured
-                            , metricValue, metricPrefix, tokens, metricNameConfigured);
+                            metricNameConfigured, metricValue, metricPrefix, tokens, metricProperties);
                     metric = new Metric(metricNameConfigured, metricValue, metricProperties, metricPrefix, tokens);
                 }
                 metrics.add(metric);
