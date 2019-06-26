@@ -91,7 +91,7 @@ public class CatMetricsClientTest {
         metricWriteHelper = mock(MetricWriteHelper.class);
         PowerMockito.mockStatic(HttpClientUtils.class);
         catEndpoint = CatEndpointsUtil.getCatEndpoints((List<Map<String, ?>>) conf.get(CAT_ENDPOINTS)).get(0);
-        phaser.register();
+        phaser.register(); // Todo - Why do you need to register a phaser in your unit tests?
     }
 
     @Test

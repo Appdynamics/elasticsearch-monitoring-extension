@@ -116,6 +116,7 @@ public class CatMetricsClient implements Runnable {
                         "header {}. This could mean that a node or shard is UNASSIGNED ", line, headerLine,
                         currentLineSize, headerSize);
                 // line size is small so contains should be OK
+                //Todo - If this implies that a response for this endpoint does not contain any meaningful metric data, why do we need to create a separate metric called 'Unassigned'?
                 if (line.contains(UNASSIGNED)) {
                     LOGGER.debug("Found a response line with UNASSIGNED for endpoint {}", catEndpoint.getEndpoint());
                     Metric metric = new Metric(UNASSIGNED, String.valueOf(unassigned++), metricPrefix, UNASSIGNED);

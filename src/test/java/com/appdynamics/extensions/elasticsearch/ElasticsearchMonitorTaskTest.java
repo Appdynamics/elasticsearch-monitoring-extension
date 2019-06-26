@@ -95,6 +95,7 @@ public class ElasticsearchMonitorTaskTest {
 
     @Test
     public void whenDoneHeartBeatMetricShouldBePrinted() {
+        /*Todo - I think this is a pointless unit test as it really isn't doing much besides increasing your code coverage %. Let me know what you think */
         Map<String, ?> server = ((List<Map<String, ?>>) conf.get(SERVERS)).get(0);
         List<CatEndpoint> catEndpoints = new ArrayList<>();
         catEndpoints.add(catEndpoint);
