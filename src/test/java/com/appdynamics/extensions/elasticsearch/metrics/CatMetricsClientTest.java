@@ -28,7 +28,6 @@ import com.appdynamics.extensions.util.MetricPathUtils;
 import com.appdynamics.extensions.yml.YmlReader;
 import com.singularity.ee.agent.systemagent.api.MetricWriter;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,7 +90,6 @@ public class CatMetricsClientTest {
         metricWriteHelper = mock(MetricWriteHelper.class);
         PowerMockito.mockStatic(HttpClientUtils.class);
         catEndpoint = CatEndpointsUtil.getCatEndpoints((List<Map<String, ?>>) conf.get(CAT_ENDPOINTS)).get(0);
-        phaser.register(); // Todo - Why do you need to register a phaser in your unit tests?
     }
 
     @Test
@@ -170,10 +168,5 @@ public class CatMetricsClientTest {
         client.run();
         verify(metricWriteHelper, never()).transformAndPrintMetrics(pathCaptor.capture());
         assertThat(heartBeat.get(), is(true));
-    }
-
-    @After
-    public void tearDown() {
-        phaser.arriveAndAwaitAdvance();
     }
 }
