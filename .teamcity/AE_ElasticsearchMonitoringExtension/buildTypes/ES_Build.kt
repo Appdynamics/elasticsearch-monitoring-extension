@@ -28,6 +28,6 @@ object ES_Build : BuildType({
         vcs { }
     }
     artifactRules = """
-       +:target/ElasticsearchMonior-*.zip => target
+       +:target/ElasticsearchMonitor-*.zip => target
     """.trimIndent()
 })
