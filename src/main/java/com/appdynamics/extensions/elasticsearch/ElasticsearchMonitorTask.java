@@ -58,14 +58,14 @@ public class ElasticsearchMonitorTask implements AMonitorTaskRunnable {
     @Override
     public void run() {
         LOGGER.debug("Fetching metrics for the server {}", serverName);
-        boolean heart_beat = spawnCatMetricsClientTasks();
-        printHeartBeat(heart_beat);
+        boolean heartBeat = spawnCatMetricsClientTasks();
+        printHeartBeat(heartBeat);
     }
 
-    private void printHeartBeat(boolean heart_beat) {
+    private void printHeartBeat(boolean heartBeat) {
         List<Metric> metrics = new ArrayList<>();
-        String metricName = "HEART_BEAT";
-        String metricValue = heart_beat ? "1" : "0";
+        String metricName = "HeartBeat";
+        String metricValue = heartBeat ? "1" : "0";
         Metric metric = new Metric(metricName, metricValue, configuration.getMetricPrefix(), serverName, metricName);
         metrics.add(metric);
         metricWriteHelper.transformAndPrintMetrics(metrics);

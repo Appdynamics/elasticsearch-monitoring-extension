@@ -95,7 +95,6 @@ public class ElasticsearchMonitorTaskTest {
 
     @Test
     public void whenDoneHeartBeatMetricShouldBePrinted() {
-        /*Todo - I think this is a pointless unit test as it really isn't doing much besides increasing your code coverage %. Let me know what you think */
         Map<String, ?> server = ((List<Map<String, ?>>) conf.get(SERVERS)).get(0);
         List<CatEndpoint> catEndpoints = new ArrayList<>();
         catEndpoints.add(catEndpoint);
@@ -105,6 +104,6 @@ public class ElasticsearchMonitorTaskTest {
         verify(metricWriteHelper).transformAndPrintMetrics(pathCaptor.capture());
         List<Metric> metrics = pathCaptor.getValue();
         assertThat(metrics.size(), is(1));
-        assertThat(metrics.get(0).getMetricPath(), is(equalTo("Custom Metrics|Elasticsearch|Cluster1|HEART_BEAT")));
+        assertThat(metrics.get(0).getMetricPath(), is(equalTo("Custom Metrics|Elasticsearch|Cluster1|HeartBeat")));
     }
 }

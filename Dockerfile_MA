@@ -1,0 +1,12 @@
+FROM alpine:latest
+RUN apk add --no-cache openjdk8
+WORKDIR /opt/appdynamics/machine-agent
+COPY --from=dtr.corp.appdynamics.com/appdynamics/machine-agent:latest /opt/appdynamics/machine-agent .
+COPY target/ElasticsearchMonitor-*.zip monitors/ElasticsearchMonitor.zip
+RUN unzip -q monitors/ElasticsearchMonitor.zip && \
+    rm monitors/ElasticsearchMonitor.zip
+COPY src/integration-test/resources/conf/config.yml monitors/ElasticsearchMonitor/config.yml
+# Setup JAVA_HOME
+ENV JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk
+ENV PATH="$JAVA_HOME/bin:${PATH}"
+CMD ["sh", "-c", "java ${MACHINE_AGENT_PROPERTIES} -jar machineagent.jar"]

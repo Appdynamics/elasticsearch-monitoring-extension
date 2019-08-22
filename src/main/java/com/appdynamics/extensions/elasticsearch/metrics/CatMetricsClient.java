@@ -31,9 +31,6 @@ import static com.appdynamics.extensions.elasticsearch.util.Constants.PROPERTIES
 
 public class CatMetricsClient implements Runnable {
     private static final Logger LOGGER = ExtensionsLoggerFactory.getLogger(CatMetricsClient.class);
-    private static final String UNASSIGNED = "UNASSIGNED";
-
-    private int unassigned;
     private static final Pattern pattern = Pattern.compile("(b|kb|mb|gb|tb|pd|ms|s|m|h|%)$",
             Pattern.CASE_INSENSITIVE);
     private final String metricPrefix;
@@ -115,13 +112,6 @@ public class CatMetricsClient implements Runnable {
                 LOGGER.debug("Current line {} does not have all entries for header {}. Size of line {}, size of " +
                         "header {}. This could mean that a node or shard is UNASSIGNED ", line, headerLine,
                         currentLineSize, headerSize);
-                // line size is small so contains should be OK
-                //Todo - If this implies that a response for this endpoint does not contain any meaningful metric data, why do we need to create a separate metric called 'Unassigned'?
-                if (line.contains(UNASSIGNED)) {
-                    LOGGER.debug("Found a response line with UNASSIGNED for endpoint {}", catEndpoint.getEndpoint());
-                    Metric metric = new Metric(UNASSIGNED, String.valueOf(unassigned++), metricPrefix, UNASSIGNED);
-                    metrics.add(metric);
-                }
             }
         }
         return metrics;

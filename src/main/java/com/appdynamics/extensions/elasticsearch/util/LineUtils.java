@@ -40,10 +40,20 @@ public class LineUtils {
         return splitter.splitToList(line);
     }
 
+    /**
+     * converts a list 1D of string to a 2D list of words
+     * @param   list A {@code List} of {@code String}
+     * @return  2D {@code List} of {@code String}
+     */
     public static List<List<String>> to2DList(List<String> list) {
         return list.stream().map(LineUtils::parseLineToList).collect(Collectors.toList());
     }
 
+    /**
+     * Creates a mapping of word to index
+     * @param line A {@code String}
+     * @return {@code Map} with word as key and index as value
+     */
     public static Map<String, Integer> getInvertedIndex(String line) {
         final Map<String, Integer> invertedMap = new HashMap<>();
         int index = 0;
@@ -53,6 +63,12 @@ public class LineUtils {
         return invertedMap;
     }
 
+    /**
+     *
+     * @param   invertedIndex
+     * @param   keys
+     * @return
+     */
     public static List<Integer> getMetricKeyOffsets(Map<String, Integer> invertedIndex, List<String> keys) {
         List<Integer> keyOffsets = new ArrayList<>();
         for (String key : keys) {
@@ -64,6 +80,12 @@ public class LineUtils {
         return keyOffsets;
     }
 
+    /**
+     *
+     * @param line
+     * @param offsets
+     * @return
+     */
     public static LinkedList<String> getMetricTokensFromOffsets(List<String> line, List<Integer> offsets) {
         return offsets.stream().map(line::get).collect(Collectors.toCollection(LinkedList::new));
     }

@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-// Todo - Looks great for the most part. I've added some comments as Todos.
-// Todo - A few comments supplementing some of the more complex streams you've used here would have been helpful, as not all of them are easy to read. Please make sure this has been manually tested on Unix & Windows, the documentation is completed and the extension is ready for BTD.
 package com.appdynamics.extensions.elasticsearch;
 
 import com.appdynamics.extensions.ABaseMonitor;

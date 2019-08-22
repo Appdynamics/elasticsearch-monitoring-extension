@@ -1,9 +1,9 @@
 ### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
 # This will create this metric in all the tiers, under this path.
-#metricPrefix: "Custom Metrics|Elasticsearch"
+metricPrefix: "Custom Metrics|Elasticsearch"
 
 # This will create it in specific Tier aka Component. Replace <COMPONENT_ID>.
-metricPrefix: "Server|Component:<ComponentID>|Custom Metrics|Elasticsearch"
+#metricPrefix: "Server|Component:<ComponentID>|Custom Metrics|Elasticsearch"
 
 servers:
   - displayName: Server1
@@ -319,6 +319,31 @@ catEndpoints:
           aggregationType: "OBSERVATION"
           timeRollUpType: "AVERAGE"
           clusterRollUpType: "INDIVIDUAL"
+
+customDashboard:
+  enabled: false
+  dashboardName: "Elasticsearch BTD Dashboard"
+  # Update the path to the dashboard file.
+  pathToSIMDashboard: "monitors/ElasticsearchMonitor/ESDashboard.json"
+  #pathToNormalDashboard: "monitors/SampleMonitor/normalDashboard.json"
+
+controllerInfo:
+  controllerHost: "controller"
+  controllerPort: 8080
+  account: "customer1"
+  username: "user1"
+  password: "welcome"
+  encryptedPassword: ""
+  encryptionKey: ""
+  controllerSslEnabled: false
+  enableOrchestration: false
+  uniqueHostId: ""
+  accountAccessKey: "${APPDYNAMICS_AGENT_ACCOUNT_ACCESS_KEY}"
+  machinePath: ""
+  simEnabled: true
+  applicationName: ""
+  tierName: ""
+  nodeName: ""
 
 encryptionKey: ""
 
