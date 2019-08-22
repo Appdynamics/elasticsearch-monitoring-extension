@@ -18,10 +18,10 @@ object Project : Project({
     name = "Elasticsearch Monitoring Extension"
 
     vcsRoot(elasticsearchmonitoringextensionci)
-    buildTypes(ES_Build)
-    buildTypes(ES_IntegrationTests)
-    buildTypes(ES_Setup)
-    buildTypes(ES_Stop)
+    buildType(ES_Build)
+    buildType(ES_IntegrationTests)
+    buildType(ES_Setup)
+    buildType(ES_Stop)
 
     features {
         versionedSettings {

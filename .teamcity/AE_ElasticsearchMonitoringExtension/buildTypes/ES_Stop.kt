@@ -7,7 +7,7 @@ import jetbrains.buildServer.configs.kotlin.v2018_2.BuildType
 import jetbrains.buildServer.configs.kotlin.v2018_2.buildSteps.exec
 
 import AE_ElasticsearchMonitoringExtension.vcsRoots.elasticsearchmonitoringextensionci
-import AE_ElasticsearchMonitoringExtension.buildTypes.*
+import AE_ElasticsearchMonitoringExtension.buildTypes.ES_Setup
 
 object ES_Stop : BuildType({
     uuid = "59d82e96-0ec9-48de-a0cf-5aee48bb45bc"
@@ -23,7 +23,7 @@ object ES_Stop : BuildType({
         }
     }
     dependencies {
-        dependency(AE_ElasticsearchMonitoringExtension_Setup) {
+        dependency(ES_Setup) {
             snapshot{
                 runOnSameAgent = true
             }

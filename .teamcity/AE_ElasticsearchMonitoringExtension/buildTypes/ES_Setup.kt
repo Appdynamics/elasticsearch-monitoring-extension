@@ -7,7 +7,7 @@ import jetbrains.buildServer.configs.kotlin.v2018_2.BuildType
 import jetbrains.buildServer.configs.kotlin.v2018_2.buildSteps.exec
 
 import AE_ElasticsearchMonitoringExtension.vcsRoots.elasticsearchmonitoringextensionci
-import AE_ElasticsearchMonitoringExtension.buildTypes.AE_ElasticsearchMonitoringExtension_Build
+import AE_ElasticsearchMonitoringExtension.buildTypes.ES_Build
 
 object ES_Setup : BuildType({
     uuid = "e57d4eb5-5f2b-4b60-b2bf-d0fe87a09bec"
@@ -23,7 +23,7 @@ object ES_Setup : BuildType({
         }
     }
     dependencies {
-        dependency(AE_ElasticsearchMonitoringExtension_Build) {
+        dependency(ES_Build) {
             snapshot { }
             artifacts {
                 artifactRules = """
