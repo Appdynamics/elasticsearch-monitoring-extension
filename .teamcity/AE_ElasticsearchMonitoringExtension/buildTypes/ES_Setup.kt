@@ -9,7 +9,7 @@ import jetbrains.buildServer.configs.kotlin.v2018_2.buildSteps.exec
 import AE_ElasticsearchMonitoringExtension.vcsRoots.elasticsearchmonitoringextensionci
 import AE_ElasticsearchMonitoringExtension.buildTypes.AE_ElasticsearchMonitoringExtension_Build
 
-object AE_ElasticsearchMonitoringExtension_Setup : BuildType({
+object ES_Setup : BuildType({
     uuid = "e57d4eb5-5f2b-4b60-b2bf-d0fe87a09bec"
     name = "Setup docker containers"
 

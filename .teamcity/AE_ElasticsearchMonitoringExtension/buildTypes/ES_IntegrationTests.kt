@@ -10,7 +10,7 @@ import jetbrains.buildServer.configs.kotlin.v2018_2.triggers.vcs
 import AE_ElasticsearchMonitoringExtension.vcsRoots.elasticsearchmonitoringextensionci
 import AE_ElasticsearchMonitoringExtension.buildTypes.AE_ElasticsearchMonitoringExtension_Setup
 
-object AE_ElasticsearchMonitoringExtension_IntegrationTests : BuildType({
+object ES_IntegrationTests : BuildType({
     uuid = "8ec33935-a8dc-4823-9825-2d2e4699016e"
     name = "Run Integration Tests - Linux"
 

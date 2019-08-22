@@ -9,7 +9,7 @@ import jetbrains.buildServer.configs.kotlin.v2018_2.buildSteps.exec
 import AE_ElasticsearchMonitoringExtension.vcsRoots.elasticsearchmonitoringextensionci
 import AE_ElasticsearchMonitoringExtension.buildTypes.*
 
-object AE_ElasticsearchMonitoringExtension_Stop : BuildType({
+object ES_Stop : BuildType({
     uuid = "59d82e96-0ec9-48de-a0cf-5aee48bb45bc"
     name = "Stop and Remove all Docker Containers"
 
