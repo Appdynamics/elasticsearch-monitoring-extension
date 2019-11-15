@@ -7,7 +7,7 @@ metricPrefix: "Custom Metrics|Elasticsearch"
 
 servers:
   - displayName: Server1
-    uri: "http://localhost:9200"
+    uri: "http://elasticsearch:9200"
     username: ""
     password: ""
     encryptedPassword: ""

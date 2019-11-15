@@ -1,11 +1,13 @@
 FROM alpine:latest
 RUN apk add --no-cache openjdk8
 WORKDIR /opt/appdynamics/machine-agent
-COPY --from=dtr.corp.appdynamics.com/appdynamics/machine-agent:latest /opt/appdynamics/machine-agent .
+COPY --from=dtr.corp.appdynamics.com/appdynamics/machine-agent /opt/appdynamics/machine-agent .
 COPY target/ElasticsearchMonitor-*.zip monitors/ElasticsearchMonitor.zip
-RUN unzip -q monitors/ElasticsearchMonitor.zip && \
+RUN unzip -q monitors/ElasticsearchMonitor.zip -d monitors/ && \
     rm monitors/ElasticsearchMonitor.zip
 COPY src/integration-test/resources/conf/config.yml monitors/ElasticsearchMonitor/config.yml
+# enable debug logging
+RUN sed -i '1,/sigar/ s/info/debug/' conf/logging/log4j.xml
 # Setup JAVA_HOME
 ENV JAVA_HOME=/usr/lib/jvm/java-1.8-openjdk
 ENV PATH="$JAVA_HOME/bin:${PATH}"
