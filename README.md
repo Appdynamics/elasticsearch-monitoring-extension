@@ -5,7 +5,7 @@ This extension requires a Java Machine Agent
 ##Use Case
 
 Elasticsearch is a distributed RESTful search server based on Lucene which provides a distributed multitenant-capable full text search engine.
-This extension collects cluster health metrics, nodes and indices stats from a Elasticsearch engine and presents them in AppDynamics Metric Browser.
+This extension collects cluster health metrics, nodes and indices stats from a Elasticsearch engine and presents them in AppDynamics Metric Browser
 
 
 ##Installation
