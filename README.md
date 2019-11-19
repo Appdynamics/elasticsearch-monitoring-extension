@@ -1,6 +1,6 @@
 # AppDynamics Monitoring Extension for use with Elasticsearch
 
-This extension requires a Java Machine Agent.
+This extension requires a Java Machine Agent
 
 ##Use Case
 
