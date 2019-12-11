@@ -6,6 +6,7 @@ COPY target/ElasticsearchMonitor-*.zip monitors/ElasticsearchMonitor.zip
 RUN unzip -q monitors/ElasticsearchMonitor.zip -d monitors/ && \
     rm monitors/ElasticsearchMonitor.zip
 COPY src/integration-test/resources/conf/config.yml monitors/ElasticsearchMonitor/config.yml
+COPY src/integration-test/resources/conf/ElasticsearchBTDDashboard.json monitors/ElasticsearchMonitor/ElasticsearchBTDDashboard.json
 # enable debug logging
 RUN sed -i '1,/sigar/ s/info/debug/' conf/logging/log4j.xml
 # Setup JAVA_HOME

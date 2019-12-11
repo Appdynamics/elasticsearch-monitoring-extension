@@ -52,21 +52,7 @@ public class MetricCheckIT {
     @Test
     public void whenInstanceIsUpThenHeartBeatIs1ForServer() throws UnsupportedEncodingException {
         assertThat(metricAPIService, is(notNullValue()));
-        String encodedMetricName = URLEncoder.encode("HeartBeat", StandardCharsets.UTF_8.toString());
-        String endpoint = StringUtils.replace(metricPathEndpoint, METRIC_NAME, encodedMetricName);
-        JsonNode jsonNode = metricAPIService.getMetricData("", endpoint);
-        assertThat(jsonNode, is(notNullValue()));
-        Assert.assertNotNull("Cannot connect to controller API", jsonNode);
-        JsonNode valueNode = JsonUtils.getNestedObject(jsonNode, "*", "metricValues", "*", "value");
-        int heartBeat = (valueNode == null || valueNode.size() == 0) ? 0 : valueNode.get(0).asInt();
-        assertThat(heartBeat, is(equalTo(1)));
-    }
-
-    @Test
-    public void whenMultiplierIsAppliedThenCheckMetricValue() throws UnsupportedEncodingException {
-        assertThat(metricAPIService, is(notNullValue()));
-        // TODO find a metric with suitable multiply value
-        String encodedMetricName = URLEncoder.encode("HeartBeat", StandardCharsets.UTF_8.toString());
+        String encodedMetricName = URLEncoder.encode("Server1|HeartBeat", StandardCharsets.UTF_8.toString());
         String endpoint = StringUtils.replace(metricPathEndpoint, METRIC_NAME, encodedMetricName);
         JsonNode jsonNode = metricAPIService.getMetricData("", endpoint);
         assertThat(jsonNode, is(notNullValue()));
@@ -93,15 +79,14 @@ public class MetricCheckIT {
     @Test
     public void whenAliasIsAppliedThenCheckMetricName() throws UnsupportedEncodingException {
         assertThat(metricAPIService, is(notNullValue()));
-        // TODO some metric for which alias has been configured
-        String encodedMetricName = URLEncoder.encode("Metrics Uploaded", StandardCharsets.UTF_8.toString());
+        String encodedMetricName = URLEncoder.encode("Server1|Cluster Stats|docker-cluster|Nodes (count)", StandardCharsets.UTF_8.toString());
         String endpoint = StringUtils.replace(metricPathEndpoint, METRIC_NAME, encodedMetricName);
         JsonNode jsonNode = metricAPIService.getMetricData("", endpoint);
         assertThat(jsonNode, is(notNullValue()));
         Assert.assertNotNull("Cannot connect to controller API", jsonNode);
         JsonNode valueNode = JsonUtils.getNestedObject(jsonNode, "metricName");
-        String metricName = (valueNode == null || valueNode.size() == 0) ? "" : valueNode.get(0).toString();
-        assertThat(metricName,is(equalTo("")));
+        String metricName = (valueNode == null || valueNode.size() == 0) ? "" : valueNode.get(0).toString().replace("\"", "");
+        assertThat(metricName,is(equalTo("Custom Metrics|Elasticsearch|Server1|Cluster Stats|docker-cluster|Nodes (count)")));
     }
 
     @Test
@@ -109,7 +94,7 @@ public class MetricCheckIT {
         assertThat(customDashboardAPIService, is(notNullValue()));
         JsonNode allDashboardsNode = customDashboardAPIService.getAllDashboards();
         assertThat("No dashboard found", allDashboardsNode, is(notNullValue()));
-        String dashboardName = "Elasticsearch dashboard";
+        String dashboardName = "Elasticsearch BTD Dashboard";
         boolean found = false;
         for (JsonNode dashNode : allDashboardsNode) {
             if (dashboardName.equals(JsonUtils.getTextValue(dashNode.get("name")))) {
@@ -123,28 +108,13 @@ public class MetricCheckIT {
     @Test
     public void checkMetricCharReplaced() throws UnsupportedEncodingException {
         assertThat(metricAPIService, is(notNullValue()));
-        // TODO some metric for which replacement has been configured
-        String encodedMetricName = URLEncoder.encode("Metrics Uploaded", StandardCharsets.UTF_8.toString());
+        String encodedMetricName = URLEncoder.encode("Server1|Cluster Stats|docker-cluster|pending tasks", StandardCharsets.UTF_8.toString());
         String endpoint = StringUtils.replace(metricPathEndpoint, METRIC_NAME, encodedMetricName);
         JsonNode jsonNode = metricAPIService.getMetricData("", endpoint);
         assertThat(jsonNode, is(notNullValue()));
         Assert.assertNotNull("Cannot connect to controller API", jsonNode);
         JsonNode valueNode = JsonUtils.getNestedObject(jsonNode, "metricName");
-        String metricName = (valueNode == null || valueNode.size() == 0) ? "" : valueNode.get(0).toString();
-        assertThat(metricName,is(equalTo("")));
+        String metricName = (valueNode == null || valueNode.size() == 0) ? "" : valueNode.get(0).toString().replace("\"", "");
+        assertThat(metricName,is(equalTo("Custom Metrics|Elasticsearch|Server1|Cluster Stats|docker-cluster|pending tasks")));
     }
-
-    // TODO do I need workbench IT?
-//    @Test
-//    public void checkWorkBenchUrlIsUp() {
-//        CloseableHttpClient httpClient = HttpClients.createDefault();
-//        HttpGet get = new HttpGet("http://0.0.0.0:9089");
-//        try {
-//            CloseableHttpResponse response = httpClient.execute(get);
-//            Assert.assertEquals(200, response.getStatusLine());
-//        } catch (IOException ioe) {
-//
-//        }
-//    }
-
 }

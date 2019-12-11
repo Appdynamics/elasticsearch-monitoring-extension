@@ -119,7 +119,6 @@ catEndpoints:
           clusterRollUpType: "INDIVIDUAL"
       - name: "pending_tasks"
         properties:
-          alias: "Pending Tasks (count)"
           aggregationType: "OBSERVATION"
           timeRollUpType: "AVERAGE"
           clusterRollUpType: "INDIVIDUAL"
@@ -320,11 +319,15 @@ catEndpoints:
           timeRollUpType: "AVERAGE"
           clusterRollUpType: "INDIVIDUAL"
 
+metricPathReplacements:
+  - replace: "_"
+    replaceWith: " "
+
 customDashboard:
-  enabled: false
+  enabled: true
   dashboardName: "Elasticsearch BTD Dashboard"
   # Update the path to the dashboard file.
-  pathToSIMDashboard: "monitors/ElasticsearchMonitor/ESDashboard.json"
+  pathToSIMDashboard: "monitors/ElasticsearchMonitor/ElasticsearchBTDDashboard.json"
   #pathToNormalDashboard: "monitors/SampleMonitor/normalDashboard.json"
 
 controllerInfo:
