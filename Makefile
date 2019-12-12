@@ -46,7 +46,7 @@ workbenchTest: ##test workbench mode
 # wait 60 seconds for workbench to report metrics
 	sleep 60
 	@echo "Checking /api/metric-paths"
-	@out=$$(docker exec workbench /bin/sh -c "curl -s -w '\n%{http_code}\n' localhost:9090/api/metric-paths"); \`
+	@out=$$(docker exec workbench /bin/sh -c "curl -s -w '\n%{http_code}\n' localhost:9090/api/metric-paths"); \
 	printf "*****/api/metric-path returned*****\n%s\n**********\n" "$$out"; \
 	code=$$(echo "$$out"|tail -1); \
 	[ "$$code" = "200" ] || { echo "Failure: code=$$code"; exit 1; }; \

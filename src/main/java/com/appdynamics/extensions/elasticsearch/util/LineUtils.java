@@ -46,6 +46,7 @@ public class LineUtils {
      * @return  2D {@code List} of {@code String}
      */
     public static List<List<String>> to2DList(List<String> list) {
+        // mapper function parseLineToList maps each element of list to an ArrayList
         return list.stream().map(LineUtils::parseLineToList).collect(Collectors.toList());
     }
 
@@ -81,9 +82,9 @@ public class LineUtils {
     }
 
     /**
-     *
-     * @param line
-     * @param offsets
+     * returns a new linked list containing only Strings at indexes represented by offsets
+     * @param line - list of String
+     * @param offsets - list of indices
      * @return
      */
     public static LinkedList<String> getMetricTokensFromOffsets(List<String> line, List<Integer> offsets) {
