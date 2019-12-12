@@ -49,7 +49,7 @@ object AE_ElasticsearchMonitoringExtension_WorkbenchTest : BuildType({
     }
 
     dependencies {
-        dependency(AE_ElasticsearchMonitoringExtension) {
+        dependency(AE_ElasticsearchMonitoringExtension_Build) {
             snapshot {
                 onDependencyFailure = FailureAction.FAIL_TO_START
             }
