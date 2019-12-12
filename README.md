@@ -5,116 +5,90 @@ This extension requires a Java Machine Agent
 ##Use Case
 
 Elasticsearch is a distributed RESTful search server based on Lucene which provides a distributed multitenant-capable full text search engine.
-This extension collects cluster health metrics, nodes and indices stats from a Elasticsearch engine and presents them in AppDynamics Metric Browser
+This extension collects metrics using cat endpoints of Elasticsearch REST API and presents them in AppDynamics Metric Browser
+## Prerequisites
+Before the extension is installed, the prerequisites mentioned [here](https://community.appdynamics.com/t5/Knowledge-Base/Extensions-Prerequisites-Guide/ta-p/35213) need to be met. Please do not proceed with the extension installation if the specified prerequisites are not met.
 
-
-##Installation
-
-1. To build from source, clone this repository and run `mvn clean install`. This will produce a ElasticSearchMonitor-VERSION.zip in the target directory. Alternatively, download the latest release archive from [Github](https://github.com/Appdynamics/elasticsearch-monitoring-extension/releases).
-2. Copy the file ElasticSearchMonitor.zip located in the 'target' directory into `<machineagent install dir>/monitors/` and unzip the file.
-3. In `<machineagent install dir>/monitors/ElasticSearchMonitor/`, open config.yml and configure the ElasticSearch parameters.
-
-   ```
-     servers:
-       - displayName: Server1
-         uri: "http://localhost:9200"
-         username: ""
-         password: ""     
-         
-     # To get the metrics through CAT apis
-     catEndPoints:
-     
-       - endPoint: "/_cat/health?v&h=cluster,nodeTotal,nodeData,shardsTotal,shardsPrimary,shardsRelocating,shardsInitializing,shardsUnassigned,pendingTasks"
-         metricKeys: [
-             "cluster"
-         ]
-              
-       - endPoint: "/_cat/allocation?v&bytes=b&h=node,shards,diskUsed,diskAvailable,diskTotal,diskPercent"
-          # Any prefixes
-         metricPrefix: "Allocation"
-          # The keys to be used in metric path. Picks up in the same order.
-         metricKeys: [
-            "node"
-         ]
- 
-       - endPoint: "/_cat/indices?v&bytes=b&time=s&h=index,health,status,shardsPrimary,shardsReplica,docsCount,docsDeleted,storeSize,pri.store.size,searchQueryTime,searchQueryTotal,searchQueryCurrent,searchFetchTotal,searchFetchTime,searchFetchCurrent,indexingIndexTotal,indexingIndexTime"
-         metricPrefix: "Indices"
-         metricKeys: [
-            "index"
-         ]
- 
-       - endPoint: "/_cat/recovery?v&bytes=b&h=index,shard,files,files_percent,bytes,bytes_percent"
-         metricPrefix: "Recovery"
-         metricKeys: [
-            "index"
-         ]
- 
-       - endPoint: "_cat/thread_pool?v&bytes=b&h=host,bulk.active,bulk.size,bulk.queue,bulk.queueSize,bulk.rejected,bulk.largest,bulk.completed,bulk.min,bulk.max"
-         metricPrefix: "ThreadPool"
-         metricKeys: [
-           "host"
-         ]
- 
-       - endPoint: "/_cat/shards?v&bytes=b&h=node,index,shard,docs,store"
-         metricPrefix: "Shards"
-         metricKeys: [
-            "node",
-            "index"
-         ]
-     
-     
-     connection:
-       socketTimeout: 2000
-       connectTimeout: 2000
-     
-     
-     # number of concurrent tasks.
-     # This doesn't need to be changed unless many instances are configured
-     numberOfThreads: 5
-   ```
-5. Restart the Machine Agent.
-
-In the AppDynamics Metric Browser, look for: Application Infrastructure Performance  | \<Tier\> | Individual Nodes | \<Node\> | Custom Metrics | Elastic Search
-
-
+Elasticsearch's HTTP module should be enabled since this extension collects metrics using cat API over HTTP. 
+## Installation
+1.  Unzip the contents of "ElasticsearchMonitor-VERSION.zip" as "ElasticsearchMonitor" and copy the "ElasticsearchMonitor" directory to `<MachineAgentHome>/monitors/`
+2. Configure the extension by referring to the below section.
+3. Configure the path to the config.yml file by editing the task-arguments in the monitor.xml file.
+    ```
+        <task-arguments>
+            <argument name="config-file" is-required="true" default-value="monitors/ElasticsearchMonitor/config.yml" />
+        </task-arguments>
+    ```
+4. Restart the machine agent.
 ## Metrics
+Number Statistics exposed through CAT APIs
+as mentioned [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/cat.html).
+## Configuration
+Note : Please make sure not to use tab (\t) while editing yaml files. You can validate the yaml file using a [yaml validator](http://yamllint.com)
 
-Cat Level Statistics
-As mentioned https://www.elastic.co/guide/en/elasticsearch/reference/current/cat.html
+Configure the extension by editing the config.yml file in `<MachineAgentHome>/monitors/ElasticsearchMonitor/`. The metricPrefix of the extension has to be configured as specified [here](https://community.appdynamics.com/t5/Knowledge-Base/How-do-I-troubleshoot-missing-custom-metrics-or-extensions/ta-p/28695#Configuring%20an%20Extension). Please make sure that the right metricPrefix is chosen based on your machine agent deployment, otherwise this could lead to metrics not being visible in the controller.
+###config.yml
+1. Configure the Elasticsearch server in the `servers` section. This is done by configuring `displayName`(required), `uri`(required), `username`, `password` or `encryptedPassword`. The `uri` only consists of the `http:\\{host}:{port}`, do not configure the complete cat endpoint here.
+2. Next step is setting the `catEndpoints`. All the `servers` will share this configuration. To define a cat API you have to provide the following -
+    * __endpoint__ - `/_cat/{cat api name}`. For example to fetch metrics from cat health API, endpoint will be `/_cat/health?v`. Please refer to elasticsearch documents for [API conventions](https://www.elastic.co/guide/en/elasticsearch/reference/6.6/api-conventions.html) and list of [CAT APIs](https://www.elastic.co/guide/en/elasticsearch/reference/6.6/cat.html).
+    * __displayName__ - Used in metric path, all metrics configured for this endpoint will be listed under this display name in the metric browser.
+    * __metricPathKeys__ - if the cat endpoint has any string value in its output then it can be included in the metric path by providing the header of that column. For example, in the below curl the node name(aliased as name) has string values. When this field is configured as `metricPathKeys: ["name"]` then metrics will be reported as `<metricPrefix>|...|N8sjO48|heap.percent` for node name `N8sjO48`
+    ```
+   curl 'http://localhost:9200/_cat/nodes?v&h=heap.percent,ram.percent,cpu,load_1m,name'
+   heap.percent ram.percent cpu load_1m name
+             49          98   3    0.47 N8sjO48
+             53          98   3    0.47 NwL3LHB
+   ```
+   * __metrics__ - Configure `name` and `properties`. `name` should match the column header in the response returned by the `endpoint`. `properties` include [metric qualifier](https://docs.appdynamics.com/display/PRO45/Build+a+Monitoring+Extension+Using+Java) and [metrics transforms](https://community.appdynamics.com/t5/Knowledge-Base/Extensions-Commons-Library-Metric-Transformers/ta-p/35413).
+### numberOfThreads
+Use the following formula for calculating `numberOfThreads`
+```
+numberOfThreads = number of servers + cat endpoints configured
+```
+for example if there are 7 cat endpoints for one server then numberOfThreads = 1 + 7 = 8
+### metricPathReplacements
+Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/Metric-Path-CharSequence-Replacements-in-Extensions/ta-p/35412) page to get detailed instructions on configuring Metric Path Character sequence replacements in Extensions.
+### customDashboard
+Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/Uploading-Dashboards-Automatically-with-AppDynamics-Extensions/ta-p/35408) page to get detailed instructions on automatic dashboard upload with extension.
+### enableHealthChecks
+Please visit [here](https://community.appdynamics.com/t5/Knowledge-Base/Extension-HealthChecks/ta-p/35409) page to get detailed instructions on 
+## Credentials Encryption
+Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-Password-Encryption-with-Extensions/ta-p/29397) page to get detailed instructions on password encryption. The steps in this document will guide you through the whole process.
+## Extensions Workbench
+Workbench is an inbuilt feature provided with each extension in order to assist you to fine tune the extension setup before you actually deploy it on the controller. Please review the following [document](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-the-Extensions-WorkBench/ta-p/30130) for how to use the Extensions WorkBench
+## Troubleshooting
+Please follow the steps listed in the [extensions troubleshooting document](https://community.appdynamics.com/t5/Knowledge-Base/How-to-troubleshoot-missing-custom-metrics-or-extensions-metrics/ta-p/28695) in order to troubleshoot your issue. These are a set of common issues that customers might have faced during the installation of the extension. 
 
-## WorkBench
-Workbench is a feature that lets you preview the metrics before registering it with the controller. This is useful if you want to fine tune the configurations. Workbench is embedded into the extension jar.
-To use the workbench
-
-1. Follow all the installation steps
-2. Start the workbench with the command
-`java -jar /path/to/MachineAgent/monitors/ElasticSearchMonitor/elasticsearch-monitoring-extension.jar`
-This starts an http server at `http://host:9090/`. This can be accessed from the browser.
-3. If the server is not accessible from outside/browser, you can use the following end points to see the list of registered metrics and errors.
-#Get the stats
-`curl http://localhost:9090/api/stats`
-#Get the registered metrics
-`curl http://localhost:9090/api/metric-paths`
-4. You can make the changes to config.yml and validate it from the browser or the API
-5. Once the configuration is complete, you can kill the workbench and start the Machine Agent
-
-## Troubleshooting 
-1. Verify Machine Agent Data:Please start the Machine Agent without the extension and make sure that it reports data. Verify that the machine agent status is UP and it is reporting Hardware Metrics.
-2. Metric Limit: Please start the machine agent with the argument -Dappdynamics.agent.maxMetrics=2000, if there is a metric limit reached error in the logs.
-3. Collect Debug Logs: Edit the file, `<MachineAgent>/conf/logging/log4j.xml` and update the level of the appender "com.appdynamics" and "com.singularity" to debug.
-
-## Custom Dashboard
-![](https://raw.github.com/Appdynamics/elasticsearch-monitoring-extension/master/Dashboard.png)
-
-##Contributing
-
-Always feel free to fork and contribute any changes directly here on GitHub.
-
-##Community
-
-Find out more in the [AppSphere](https://www.appdynamics.com/community/exchange/extension/elasticsearch-monitoring-extension/) community.
-
-##Support
-For any questions or feature request, please contact [AppDynamics Support](mailto:help@appdynamics.com).
+To troubleshoot this extension please follow these steps -
+1. Ensure that elasticsearch is up and running by executing this command - 
+    ```
+    curl -v "http://<elasticsearch-host>:<port>"
+    ```
+    This command will return a JSON response and the `tagline` will read `You Know, for Search`
+2. If there is a problem in fetching metrics from one of the configured endpoints then run the command -
+    ```
+    curl -v "http://<elasticsearch-host>:<port>/_cat/<endpoint-configured>?v"
+    ```
+    Ensure that the metric names configured in config.yml matches the names in the header of the response. For example, if there are issues in fetching metrics from cat health api then run the command and ensure that you get a valid output and that the header names match with the configured metric names (`v` parameter in the query is to enable verbose elasticsearch output).
+    ```
+   curl -v "http://<elasticsearch-host>:<port>/_cat/health?v"
+   ```
+If these don't solve your issue, there last step on the troubleshooting-document to contact the support team.
 
 
+## Support Tickets
+If after going through the Troubleshooting Document you have not been able to get your extension working, please file a ticket and add the following information.
+
+Please provide us with the following for us to assist you better:
+1. Config.yml & monitor.xml (`<MachineAgentHome>/monitors/DgraphMonitor`)
+2. Controller-info.xml (`<MachineAgentHome>/conf/controller-info.xml`)
+3. Enable Machine Agent `DEBUG` logging by changing the level values of the following logger elements from `INFO` to `DEBUG` in `<MachineAgent>/conf/logging/log4j.xml`:
+    ```
+    <logger name="com.singularity">
+    <logger name="com.appdynamics">
+    ```
+4. After letting the Machine Agent run for 10-15 minutes, attach the complete `<MachineAgentHome>/logs/` directory.
+
+For any support related questions, you can also contact [help@appdynamics.com](mailto:help@appdynamics.com).
+## Contributing
+Always feel free to fork and contribute any changes directly via [GitHub]
