@@ -103,7 +103,7 @@ public class CatMetricsClient implements Runnable {
             if (currentLineSize == headerSize) {
                 LinkedList<String> metricTokens = LineUtils.getMetricTokensFromOffsets(line, keyOffsets);
                 List<Metric> metricsFromLine = getConfiguredMetricsFromLine(headerInvertedIndex, line, metricTokens);
-                if (metricsFromLine == null) {
+                if (metricsFromLine == null) { //TODO on line 146
                     return new ArrayList<>();
                 } else {
                     metrics.addAll(metricsFromLine);
@@ -143,7 +143,7 @@ public class CatMetricsClient implements Runnable {
             } else {
                 LOGGER.error("The metric is not configured correctly. Skipping metrics collection for endpoint {}",
                         catEndpoint.getEndpoint());
-                return null;
+                return null; //Todo This is not required. List<Metric> will not contain anything if this block is entered
             }
         }
         return metrics;
