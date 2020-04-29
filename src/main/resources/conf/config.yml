@@ -7,13 +7,13 @@ metricPrefix: "Server|Component:<ComponentID>|Custom Metrics|Elasticsearch"
 
 servers:
   - displayName: Server1
-    uri: "http://localhost:9200" #TODO clear this before releasing
+    uri: ""
     username: ""
     password: ""
     encryptedPassword: ""
 
 # To get the metrics through CAT apis
-catEndpoints: # TODO : consider moving all this information to a metrics.xml file
+catEndpoints:
   # shard allocation stats
   - endpoint: "/_cat/allocation?v&bytes=b"
     displayName: "Allocations"
