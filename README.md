@@ -2,7 +2,7 @@
 
 This extension requires a Java Machine Agent
 
-##Use Case
+## Use Case
 
 Elasticsearch is a distributed RESTful search server based on Lucene which provides a distributed multitenant-capable full text search engine.
 This extension collects metrics using cat endpoints of Elasticsearch REST API and presents them in AppDynamics Metric Browser
@@ -43,15 +43,15 @@ Configure the extension by editing the config.yml file in `<MachineAgentHome>/mo
 ### numberOfThreads
 Use the following formula for calculating `numberOfThreads`
 ```
-numberOfThreads = number of servers + cat endpoints configured
+numberOfThreads = number of servers *(1 + cat endpoints configured)
 ```
-for example if there are 7 cat endpoints for one server then numberOfThreads = 1 + 7 = 8
+for example if there are 7 cat endpoints for one server then numberOfThreads = 1 * (1 + 7) = 8
 ### metricPathReplacements
 Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/Metric-Path-CharSequence-Replacements-in-Extensions/ta-p/35412) page to get detailed instructions on configuring Metric Path Character sequence replacements in Extensions.
 ### customDashboard
 Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/Uploading-Dashboards-Automatically-with-AppDynamics-Extensions/ta-p/35408) page to get detailed instructions on automatic dashboard upload with extension.
 ### enableHealthChecks
-Please visit [here](https://community.appdynamics.com/t5/Knowledge-Base/Extension-HealthChecks/ta-p/35409) page to get detailed instructions on 
+Please visit [here](https://community.appdynamics.com/t5/Knowledge-Base/Extension-HealthChecks/ta-p/35409) page to get detailed instructions on monitor health checks. Please note this should be set to false in Windows
 ## Credentials Encryption
 Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-Password-Encryption-with-Extensions/ta-p/29397) page to get detailed instructions on password encryption. The steps in this document will guide you through the whole process.
 ## Extensions Workbench

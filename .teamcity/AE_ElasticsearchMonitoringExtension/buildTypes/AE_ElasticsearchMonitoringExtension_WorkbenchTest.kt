@@ -1,7 +1,7 @@
 package AE_ElasticsearchMonitoringExtension.buildTypes
 
 import AE_ElasticsearchMonitoringExtension.publishCommitStatus
-import AE_ExtensionStarter.triggerAfter
+import AE_ElasticsearchMonitoringExtension.triggerAfter
 import AE_ElasticsearchMonitoringExtension.vcsRoots.AE_ElasticsearchMonitoringExtension
 import AE_ElasticsearchMonitoringExtension.withDefaults
 import jetbrains.buildServer.configs.kotlin.v2018_2.BuildStep
@@ -49,5 +49,5 @@ object AE_ElasticsearchMonitoringExtension_WorkbenchTest : BuildType({
 
     publishCommitStatus()
 
-    triggerAfter(AE_ExtensionStarter_Build)
+    triggerAfter(AE_ElasticsearchMonitoringExtension_Build)
 })
