@@ -16,7 +16,6 @@
         <target.name>ElasticsearchMonitor</target.name>
         <target.dir>${project.build.directory}/${target.name}</target.dir>
         <skipITs>true</skipITs>
-        <kotlin.version>1.2.71</kotlin.version>
     </properties>
 
     <dependencies>
@@ -29,40 +28,7 @@
         <dependency>
             <groupId>com.appdynamics</groupId>
             <artifactId>appd-exts-commons</artifactId>
-            <version>2.2.1</version>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>2.9.9</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.9.9.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.21</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-            <version>${kotlin.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test</artifactId>
-            <version>${kotlin.version}</version>
-            <scope>test</scope>
+            <version>2.2.3</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -152,6 +118,7 @@
                                 <copy todir="${target.dir}">
                                     <fileset dir="src/main/resources/conf" includes="monitor.xml"/>
                                     <fileset dir="src/main/resources/conf" includes="config.yml"/>
+                                    <fileset dir="src/main/resources/conf" includes="ElasticsearchDashboard.json"/>
                                     <fileset dir="${project.basedir}" includes="LICENSE.txt,NOTICE.txt"/>
                                     <fileset dir="${project.build.directory}"
                                              includes="${project.artifactId}.${project.packaging}"/>

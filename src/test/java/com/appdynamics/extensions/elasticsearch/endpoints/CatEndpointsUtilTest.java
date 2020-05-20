@@ -15,15 +15,8 @@
 
 package com.appdynamics.extensions.elasticsearch.endpoints;
 
-import com.appdynamics.extensions.yml.YmlReader;
 import org.junit.Test;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-
-import static com.appdynamics.extensions.elasticsearch.util.Constants.CAT_ENDPOINTS;
-import static com.appdynamics.extensions.elasticsearch.util.Constants.DISPLAY_NAME;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -32,24 +25,6 @@ import static org.junit.Assert.assertThat;
  * @author pradeep.nair
  */
 public class CatEndpointsUtilTest {
-
-    @Test
-    public void testGetCatEndpoints() {
-        Map<String, ?> conf = YmlReader.readFromFileAsMap(new File("src/test/resources/conf/config.yml"));
-        List<Map<String, ?>> catEndpointsFromConfig = (List<Map<String, ?>>) conf.get(CAT_ENDPOINTS);
-        Map<String, ?> expectedFirstMetric = ((List<Map<String, ?>>) catEndpointsFromConfig.get(0).get("metrics")).get(0);
-        List<CatEndpoint> catEndpoints = CatEndpointsUtil.getCatEndpoints(catEndpointsFromConfig);
-        assertThat(catEndpoints.size(), is(equalTo(catEndpointsFromConfig.size())));
-        CatEndpoint endpoint = catEndpoints.get(0);
-        String expectedEndpoint = (String) catEndpointsFromConfig.get(0).get("endpoint");
-        assertThat(endpoint.getEndpoint(), is(equalTo(expectedEndpoint)));
-        String expectedDisplayName = (String) catEndpointsFromConfig.get(0).get(DISPLAY_NAME);
-        assertThat(endpoint.getDisplayName(), is(equalTo(expectedDisplayName)));
-        List<String> expectedMetricPathKeys = (List<String>) catEndpointsFromConfig.get(0).get("metricPathKeys");
-        assertThat(endpoint.getMetricPathKeys(), is(equalTo(expectedMetricPathKeys)));
-        Map<String, ?> actualMetric = endpoint.getMetrics().get(0);
-        assertThat(actualMetric, is(equalTo(expectedFirstMetric)));
-    }
 
     @Test
     public void testGetURL() {

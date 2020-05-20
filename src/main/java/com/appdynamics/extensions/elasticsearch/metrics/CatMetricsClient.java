@@ -16,7 +16,6 @@
 package com.appdynamics.extensions.elasticsearch.metrics;
 
 import com.appdynamics.extensions.MetricWriteHelper;
-import com.appdynamics.extensions.elasticsearch.endpoints.CatEndpoint;
 import com.appdynamics.extensions.elasticsearch.endpoints.CatEndpointsUtil;
 import com.appdynamics.extensions.elasticsearch.util.LineUtils;
 import com.appdynamics.extensions.http.HttpClientUtils;
@@ -34,6 +33,9 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
+import static com.appdynamics.extensions.elasticsearch.util.Constants.ENDPOINT;
+import static com.appdynamics.extensions.elasticsearch.util.Constants.METRICS;
+import static com.appdynamics.extensions.elasticsearch.util.Constants.METRIC_PATH_KEYS;
 import static com.appdynamics.extensions.elasticsearch.util.Constants.NAME;
 import static com.appdynamics.extensions.elasticsearch.util.Constants.PROPERTIES;
 
@@ -47,11 +49,11 @@ public class CatMetricsClient implements Runnable {
     private final AtomicBoolean heartBeat;
     private final CloseableHttpClient httpClient;
     private final MetricWriteHelper metricWriteHelper;
-    private final CatEndpoint catEndpoint;
+    private final Map<String, ?> catEndpoint;
 
     public CatMetricsClient(String metricPrefix, String uri, Phaser phaser, AtomicBoolean heartBeat,
                             CloseableHttpClient httpClient, MetricWriteHelper metricWriteHelper,
-                            CatEndpoint catEndpoint) {
+                            Map<String, ?> catEndpoint) {
         this.metricPrefix = metricPrefix;
         this.uri = uri;
         this.heartBeat = heartBeat;
@@ -64,13 +66,13 @@ public class CatMetricsClient implements Runnable {
 
     @Override
     public void run() {
-        String url = CatEndpointsUtil.getURL(uri, catEndpoint.getEndpoint());
+        String url = CatEndpointsUtil.getURL(uri, (String) catEndpoint.get(ENDPOINT));
         LOGGER.debug("Url formed is {}", url);
         List<String> response = getResponse(url);
         if (response != null) {
             List<Metric> metrics = fetchMetricsFromResponse(response);
             if (metrics.isEmpty()) {
-                LOGGER.debug("No metrics retrieved from endpoint {}", catEndpoint.getEndpoint());
+                LOGGER.debug("No metrics retrieved from endpoint {}", catEndpoint.get(ENDPOINT));
             } else {
                 metricWriteHelper.transformAndPrintMetrics(metrics);
             }
@@ -81,12 +83,12 @@ public class CatMetricsClient implements Runnable {
     private List<String> getResponse(String url) {
         List<String> response = HttpClientUtils.getResponseAsLines(httpClient, url);
         if (response == null) {
-            LOGGER.error("Response form endpoint {} is null", catEndpoint.getEndpoint());
+            LOGGER.error("Response form endpoint {} is null", catEndpoint.get(ENDPOINT));
             return null;
         }
         heartBeat.compareAndSet(false, true);
         if (response.isEmpty() || response.size() == 1) {
-            LOGGER.error("Response from endpoint {} is empty", catEndpoint.getEndpoint());
+            LOGGER.error("Response from endpoint {} is empty", catEndpoint.get(ENDPOINT));
             return null;
         }
         return response;
@@ -96,14 +98,14 @@ public class CatMetricsClient implements Runnable {
         List<Metric> metrics = new ArrayList<>();
         String headerLine = response.remove(0);
         List<List<String>> _2DResponseList = LineUtils.to2DList(response);
-        LOGGER.debug("Header line from endpoint {} is {}", catEndpoint.getEndpoint(), headerLine);
+        LOGGER.debug("Header line from endpoint {} is {}", catEndpoint.get(ENDPOINT), headerLine);
         Map<String, Integer> headerInvertedIndex = LineUtils.getInvertedIndex(headerLine);
         int headerSize = headerInvertedIndex.size();
-        List<String> metricPathKeys = catEndpoint.getMetricPathKeys();
+        List<String> metricPathKeys = (List<String>) catEndpoint.get(METRIC_PATH_KEYS);
         List<Integer> keyOffsets = LineUtils.getMetricKeyOffsets(headerInvertedIndex, metricPathKeys);
-        if (keyOffsets.size() != catEndpoint.getMetricPathKeys().size()) {
+        if (keyOffsets.size() != ((List<String>) catEndpoint.get(METRIC_PATH_KEYS)).size()) {
             LOGGER.error("Could not find all keys {} in header {} for endpoint {}. Check configuration.",
-                    metricPathKeys, headerLine, catEndpoint.getEndpoint());
+                    metricPathKeys, headerLine, catEndpoint.get(ENDPOINT));
             return metrics;
         }
         for (List<String> line : _2DResponseList) {
@@ -111,7 +113,7 @@ public class CatMetricsClient implements Runnable {
             if (currentLineSize == headerSize) {
                 LinkedList<String> metricTokens = LineUtils.getMetricTokensFromOffsets(line, keyOffsets);
                 List<Metric> metricsFromLine = getConfiguredMetricsFromLine(headerInvertedIndex, line, metricTokens);
-                if (metricsFromLine == null) { //TODO on line 146
+                if (metricsFromLine == null) {
                     return new ArrayList<>();
                 } else {
                     metrics.addAll(metricsFromLine);
@@ -128,7 +130,7 @@ public class CatMetricsClient implements Runnable {
     private List<Metric> getConfiguredMetricsFromLine(Map<String, Integer> headerInvertedIndex, List<String> line,
                                                       LinkedList<String> metricTokens) {
         List<Metric> metrics = new ArrayList<>();
-        for (Map<String, ?> metricsConfigured : catEndpoint.getMetrics()) {
+        for (Map<String, ?> metricsConfigured : (List<Map<String, ?>>) catEndpoint.get(METRICS)) {
             String metricNameConfigured = (String) metricsConfigured.get(NAME);
             Map<String, ?> metricProperties = (Map<String, ?>) metricsConfigured.get(PROPERTIES);
             int metricIndex = headerInvertedIndex.getOrDefault(metricNameConfigured, -1);
@@ -149,9 +151,8 @@ public class CatMetricsClient implements Runnable {
                 }
                 metrics.add(metric);
             } else {
-                LOGGER.error("The metric is not configured correctly. Skipping metrics collection for endpoint {}",
-                        catEndpoint.getEndpoint());
-                return null; //Todo This is not required. List<Metric> will not contain anything if this block is entered
+                LOGGER.error("The metric is not configured correctly. Either the metric {} is not the header or " +
+                        "response from the endpoint {} or it is empty", metricNameConfigured, catEndpoint.get(ENDPOINT));
             }
         }
         return metrics;

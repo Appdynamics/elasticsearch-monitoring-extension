@@ -76,7 +76,7 @@
                             "displayName": "null",
                             "inputMetricText": false,
                             "inputMetricPath": null,
-                            "relativeMetricPath": "Custom Metrics|Elasticsearch|Server1|HeartBeat"
+                            "relativeMetricPath": "Custom Metrics|*|*|HeartBeat"
                         },
                         "rollupMetricData": false,
                         "expressionString": null,

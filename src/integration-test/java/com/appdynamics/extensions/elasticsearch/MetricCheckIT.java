@@ -19,7 +19,7 @@ import com.appdynamics.extensions.controller.apiservices.CustomDashboardAPIServi
 import com.appdynamics.extensions.controller.apiservices.MetricAPIService;
 import com.appdynamics.extensions.util.JsonUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +32,6 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
-
 
 public class MetricCheckIT {
     private MetricAPIService metricAPIService;

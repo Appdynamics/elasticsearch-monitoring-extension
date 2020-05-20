@@ -320,8 +320,39 @@ catEndpoints:
           timeRollUpType: "AVERAGE"
           clusterRollUpType: "INDIVIDUAL"
 
+metricPathReplacements:
+  - replace: "_"
+    replaceWith: " "
+
+customDashboard:
+  enabled: true
+  dashboardName: "Elasticsearch Dashboard"
+  # Update the path to the dashboard file.
+  pathToSIMDashboard: "monitors/ElasticsearchMonitor/ElasticsearchDashboard.json"
+  #pathToNormalDashboard: "monitors/SampleMonitor/normalDashboard.json"
+
+controllerInfo:
+  controllerHost: ""
+  controllerPort: 8090
+  account: ""
+  username: ""
+  password: ""
+  encryptedPassword: ""
+  encryptionKey: ""
+  controllerSslEnabled: false
+  enableOrchestration: false
+  uniqueHostId: ""
+  accountAccessKey: ""
+  machinePath: ""
+  simEnabled: true
+  applicationName: ""
+  tierName: ""
+  nodeName: ""
+
+enableHealthChecks: true # should be false for windows
+
 encryptionKey: ""
 
-# numberOfThreads = number of servers + cat endpoints configured
-# for example if there are 7 cat endpoints for one server then numberOfThreads = 1 + 7 = 8
+# numberOfThreads = number of servers * (1 + cat endpoints configured)
+# for example if there are 7 cat endpoints for one server then numberOfThreads = 1 * (1 + 7) = 8
 numberOfThreads: 8

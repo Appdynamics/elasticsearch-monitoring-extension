@@ -19,8 +19,6 @@ import com.appdynamics.extensions.ABaseMonitor;
 import com.appdynamics.extensions.MetricWriteHelper;
 import com.appdynamics.extensions.conf.MonitorContext;
 import com.appdynamics.extensions.conf.MonitorContextConfiguration;
-import com.appdynamics.extensions.elasticsearch.endpoints.CatEndpoint;
-import com.appdynamics.extensions.elasticsearch.endpoints.CatEndpointsUtil;
 import com.appdynamics.extensions.http.HttpClientUtils;
 import com.appdynamics.extensions.metrics.Metric;
 import com.appdynamics.extensions.metrics.MetricCharSequenceReplacer;
@@ -46,6 +44,7 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.appdynamics.extensions.elasticsearch.util.Constants.CAT_ENDPOINTS;
+import static com.appdynamics.extensions.elasticsearch.util.Constants.METRIC_PATH_KEYS;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -65,7 +64,7 @@ public class CatMetricsClientTest {
     private MetricWriteHelper metricWriteHelper;
     private String metricPrefix;
     private ArgumentCaptor<List> pathCaptor;
-    private CatEndpoint catEndpoint;
+    private Map<String, Object> catEndpoint;
     private AtomicBoolean heartBeat;
     private CloseableHttpClient httpClient;
     private final Phaser phaser = new Phaser();
@@ -89,7 +88,7 @@ public class CatMetricsClientTest {
         metricPrefix = "Custom Metrics|Elasticsearch|Cluster1";
         metricWriteHelper = mock(MetricWriteHelper.class);
         PowerMockito.mockStatic(HttpClientUtils.class);
-        catEndpoint = CatEndpointsUtil.getCatEndpoints((List<Map<String, ?>>) conf.get(CAT_ENDPOINTS)).get(0);
+        catEndpoint = ((List<Map<String, Object>>) conf.get(CAT_ENDPOINTS)).get(0);
     }
 
     @Test
@@ -141,7 +140,8 @@ public class CatMetricsClientTest {
     public void canParseMetricsSuccessfullyForValidResponseWithEmptyMetricKeys() {
         PowerMockito.when(HttpClientUtils.getResponseAsLines(any(CloseableHttpClient.class), any()))
                 .thenAnswer(invocationOnMock -> Files.readAllLines(Paths.get("src/test/resources/cat_health.txt")));
-        catEndpoint.setMetricPathKeys(new ArrayList<>());
+        List<String> paths = new ArrayList<>();
+        catEndpoint.put(METRIC_PATH_KEYS, paths);
         CatMetricsClient client = new CatMetricsClient(metricPrefix, "http://localhost:9200", phaser, heartBeat,
                 httpClient, metricWriteHelper, catEndpoint);
         client.run();
@@ -166,7 +166,9 @@ public class CatMetricsClientTest {
         CatMetricsClient client = new CatMetricsClient(metricPrefix, "http://localhost:9200", phaser, heartBeat,
                 httpClient, metricWriteHelper, catEndpoint);
         client.run();
-        verify(metricWriteHelper, never()).transformAndPrintMetrics(pathCaptor.capture());
+        verify(metricWriteHelper).transformAndPrintMetrics(pathCaptor.capture());
+        List<Metric> actualMetrics = pathCaptor.getValue();
+        assertThat(actualMetrics.size(), is(2));
         assertThat(heartBeat.get(), is(true));
     }
 }

@@ -64,7 +64,6 @@ public class LineUtils {
         return invertedMap;
     }
 
-    //TODO complete javadoc below
     /**
      *
      * @param   invertedIndex
