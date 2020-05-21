@@ -1,31 +1,25 @@
-<!--
-  ~ Copyright 2018. AppDynamics LLC and its affiliates.
-  ~ All Rights Reserved.
-  ~ This is unpublished proprietary source code of AppDynamics LLC and its affiliates.
-  ~ The copyright notice above does not evidence any actual or intended publication of such source code.
-  -->
+<?xml version="1.0" encoding="UTF-8"?>
 
 <monitor>
-	<name>ElasticSearchMonitor</name>
-	<type>managed</type>
+    <name>ElasticsearchMonitor</name>
+    <type>managed</type>
     <enabled>true</enabled>
-	<description>Monitors Elastic Search</description>
-	<monitor-configuration></monitor-configuration>
-	<monitor-run-task>
-		<execution-style>periodic</execution-style>
-		<execution-frequency-in-seconds>60</execution-frequency-in-seconds>
-		<name>Elastic Search Monitor Run Task</name>
-		<display-name>Elastic Search Monitor Task</display-name>
-		<description>Elastic Search Monitor Task</description>
-		<type>java</type>
-		<execution-timeout-in-secs>60</execution-timeout-in-secs>
-		<task-arguments>
-			<!-- config file-->
-			<argument name="config-file" is-required="true" default-value="monitors/ElasticSearchMonitor/config.yml" />
-		</task-arguments>
-		<java-task>
-		      <classpath>elasticsearch-monitoring-extension.jar</classpath>
-		          <impl-class>com.appdynamics.extensions.elasticsearch.ElasticSearchMonitor</impl-class>
-		</java-task>
-	</monitor-run-task>
+    <description>Monitors Elasticsearch</description>
+    <monitor-configuration></monitor-configuration>
+    <monitor-run-task>
+        <execution-style>periodic</execution-style>
+        <execution-frequency-in-seconds>60</execution-frequency-in-seconds>
+        <name>Elasticsearch Monitor Run Task</name>
+        <display-name>Elasticsearch Monitor Task</display-name>
+        <description>Elasticsearch Monitor Task</description>
+        <type>java</type>
+        <execution-timeout-in-secs>60</execution-timeout-in-secs>
+        <task-arguments>
+            <argument name="config-file" is-required="true" default-value="monitors/ElasticsearchMonitor/config.yml"/>
+        </task-arguments>
+        <java-task>
+            <classpath>elasticsearch-monitoring-extension.jar</classpath>
+            <impl-class>com.appdynamics.extensions.elasticsearch.ElasticsearchMonitor</impl-class>
+        </java-task>
+    </monitor-run-task>
 </monitor>
