@@ -338,7 +338,6 @@ controllerInfo:
   username: ""
   password: ""
   encryptedPassword: ""
-  encryptionKey: ""
   controllerSslEnabled: false
   enableOrchestration: false
   uniqueHostId: ""
