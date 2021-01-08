@@ -4,4 +4,7 @@
 * Initial open source release 
 
 ### Version 3.0.0
---------WIP----------
+* Upgraded version with Commons 2.2.3
+
+### Version 3.0.1
+* Upgrading to Commons 2.2.4
