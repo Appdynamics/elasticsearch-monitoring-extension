@@ -348,8 +348,6 @@ controllerInfo:
   tierName: ""
   nodeName: ""
 
-enableHealthChecks: true # should be false for windows
-
 encryptionKey: ""
 
 # numberOfThreads = number of servers * (1 + cat endpoints configured)
