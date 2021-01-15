@@ -1,13 +1,13 @@
 ### ANY CHANGES TO THIS FILE DOES NOT REQUIRE A RESTART ###
 # This will create this metric in all the tiers, under this path.
-#metricPrefix: "Custom Metrics|Elasticsearch"
+metricPrefix: "Custom Metrics|Elasticsearch"
 
 # This will create it in specific Tier aka Component. Replace <COMPONENT_ID>.
-metricPrefix: "Server|Component:<ComponentID>|Custom Metrics|Elasticsearch"
+#metricPrefix: "Server|Component:<ComponentID>|Custom Metrics|Elasticsearch"
 
 servers:
   - displayName: Server1
-    uri: ""
+    uri: "http://elasticsearch:9200"
     username: ""
     password: ""
     encryptedPassword: ""
@@ -119,7 +119,6 @@ catEndpoints:
           clusterRollUpType: "INDIVIDUAL"
       - name: "pending_tasks"
         properties:
-          alias: "Pending Tasks (count)"
           aggregationType: "OBSERVATION"
           timeRollUpType: "AVERAGE"
           clusterRollUpType: "INDIVIDUAL"
@@ -326,22 +325,22 @@ metricPathReplacements:
 
 customDashboard:
   enabled: true
-  dashboardName: "Elasticsearch Dashboard"
+  dashboardName: "Elasticsearch BTD Dashboard"
   # Update the path to the dashboard file.
-  pathToSIMDashboard: "monitors/ElasticsearchMonitor/ElasticsearchDashboard.json"
+  pathToSIMDashboard: "monitors/ElasticsearchMonitor/ElasticsearchBTDDashboard.json"
   #pathToNormalDashboard: "monitors/SampleMonitor/normalDashboard.json"
 
 controllerInfo:
-  controllerHost: ""
-  controllerPort: 8090
-  account: ""
-  username: ""
-  password: ""
+  controllerHost: "controller"
+  controllerPort: 8080
+  account: "customer1"
+  username: "user1"
+  password: "welcome"
   encryptedPassword: ""
   controllerSslEnabled: false
   enableOrchestration: false
   uniqueHostId: ""
-  accountAccessKey: ""
+  accountAccessKey: "${APPDYNAMICS_AGENT_ACCOUNT_ACCESS_KEY}"
   machinePath: ""
   simEnabled: true
   applicationName: ""
