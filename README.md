@@ -19,10 +19,10 @@ Elasticsearch's HTTP module should be enabled since this extension collects metr
             <argument name="config-file" is-required="true" default-value="monitors/ElasticsearchMonitor/config.yml" />
         </task-arguments>
     ```
-4. Restart the machine agent.
-## Metrics
-Number Statistics exposed through CAT APIs
-as mentioned [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/cat.html).
+4. Restart the machine agent. 
+
+Please place the extension in the "monitors" directory of your Machine Agent installation directory. Do not place the extension in the "extensions" directory of your Machine Agent installation directory.
+
 ## Configuration
 Note : Please make sure not to use tab (\t) while editing yaml files. You can validate the yaml file using a [yaml validator](http://yamllint.com)
 
@@ -50,8 +50,11 @@ for example if there are 7 cat endpoints for one server then numberOfThreads = 1
 Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/Metric-Path-CharSequence-Replacements-in-Extensions/ta-p/35412) page to get detailed instructions on configuring Metric Path Character sequence replacements in Extensions.
 ### customDashboard
 Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/Uploading-Dashboards-Automatically-with-AppDynamics-Extensions/ta-p/35408) page to get detailed instructions on automatic dashboard upload with extension.
-### enableHealthChecks
-Please visit [here](https://community.appdynamics.com/t5/Knowledge-Base/Extension-HealthChecks/ta-p/35409) page to get detailed instructions on monitor health checks. Please note this should be set to false in Windows
+
+## Metrics
+Number Statistics exposed through CAT APIs
+as mentioned [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/cat.html).
+
 ## Credentials Encryption
 Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/How-to-use-Password-Encryption-with-Extensions/ta-p/29397) page to get detailed instructions on password encryption. The steps in this document will guide you through the whole process.
 ## Extensions Workbench
@@ -91,4 +94,13 @@ Please provide us with the following for us to assist you better:
 
 For any support related questions, you can also contact [help@appdynamics.com](mailto:help@appdynamics.com).
 ## Contributing
-Always feel free to fork and contribute any changes directly via [GitHub]
+Always feel free to fork and contribute any changes directly via [GitHub](https://github.com/Appdynamics/elasticsearch-monitoring-extension)
+
+## Version
+|          Name            |  Version   |
+|--------------------------|------------|
+|Extension Version         |3.0.1       |
+|Controller Compatibility  |4.5 or Later|
+|Machine Agent Version     |4.5.13+     |
+|Product Tested on         |6.6.2      |
+|Last Update               |15/01/2021  |
