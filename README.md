@@ -76,23 +76,7 @@ To troubleshoot this extension please follow these steps -
     ```
    curl -v "http://<elasticsearch-host>:<port>/_cat/health?v"
    ```
-If these don't solve your issue, there last step on the troubleshooting-document to contact the support team.
 
-
-## Support Tickets
-If after going through the Troubleshooting Document you have not been able to get your extension working, please file a ticket and add the following information.
-
-Please provide us with the following for us to assist you better:
-1. Config.yml & monitor.xml (`<MachineAgentHome>/monitors/DgraphMonitor`)
-2. Controller-info.xml (`<MachineAgentHome>/conf/controller-info.xml`)
-3. Enable Machine Agent `DEBUG` logging by changing the level values of the following logger elements from `INFO` to `DEBUG` in `<MachineAgent>/conf/logging/log4j.xml`:
-    ```
-    <logger name="com.singularity">
-    <logger name="com.appdynamics">
-    ```
-4. After letting the Machine Agent run for 10-15 minutes, attach the complete `<MachineAgentHome>/logs/` directory.
-
-For any support related questions, you can also contact [help@appdynamics.com](mailto:help@appdynamics.com).
 ## Contributing
 Always feel free to fork and contribute any changes directly via [GitHub](https://github.com/Appdynamics/elasticsearch-monitoring-extension)
 
