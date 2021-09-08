@@ -24,7 +24,7 @@ Elasticsearch's HTTP module should be enabled since this extension collects metr
 Please place the extension in the "monitors" directory of your Machine Agent installation directory. Do not place the extension in the "extensions" directory of your Machine Agent installation directory.
 
 ## Configuration
-Note : Please make sure not to use tab (\t) while editing yaml files. You can validate the yaml file using a [yaml validator](http://yamllint.com)
+Note : Please make sure not to use tab (\t) while editing yaml files. You can validate the yaml file using a [yaml validator](https://jsonformatter.org/yaml-validator)
 
 Configure the extension by editing the config.yml file in `<MachineAgentHome>/monitors/ElasticsearchMonitor/`. The metricPrefix of the extension has to be configured as specified [here](https://community.appdynamics.com/t5/Knowledge-Base/How-do-I-troubleshoot-missing-custom-metrics-or-extensions/ta-p/28695#Configuring%20an%20Extension). Please make sure that the right metricPrefix is chosen based on your machine agent deployment, otherwise this could lead to metrics not being visible in the controller.
 ###config.yml
