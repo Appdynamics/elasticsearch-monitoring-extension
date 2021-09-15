@@ -11,7 +11,8 @@ Before the extension is installed, the prerequisites mentioned [here](https://co
 
 Elasticsearch's HTTP module should be enabled since this extension collects metrics using cat API over HTTP. 
 ## Installation
-1.  Unzip the contents of "ElasticsearchMonitor-VERSION.zip" as "ElasticsearchMonitor" and copy the "ElasticsearchMonitor" directory to `<MachineAgentHome>/monitors/`
+1. Run 'mvn clean install' from "ElasticsearchMonitorRepo"
+2. Unzip the contents of "ElasticsearchMonitor-VERSION.zip" from `targets` as "ElasticsearchMonitor" and copy the "ElasticsearchMonitor" directory to `<MachineAgentHome>/monitors/`
 2. Configure the extension by referring to the below section.
 3. Configure the path to the config.yml file by editing the task-arguments in the monitor.xml file.
     ```
@@ -24,10 +25,11 @@ Elasticsearch's HTTP module should be enabled since this extension collects metr
 Please place the extension in the "monitors" directory of your Machine Agent installation directory. Do not place the extension in the "extensions" directory of your Machine Agent installation directory.
 
 ## Configuration
-Note : Please make sure not to use tab (\t) while editing yaml files. You can validate the yaml file using a [yaml validator](http://yamllint.com)
+Note : Please make sure not to use tab (\t) while editing yaml files. You can validate the yaml file using a [yaml validator](https://jsonformatter.org/yaml-validator)
 
 Configure the extension by editing the config.yml file in `<MachineAgentHome>/monitors/ElasticsearchMonitor/`. The metricPrefix of the extension has to be configured as specified [here](https://community.appdynamics.com/t5/Knowledge-Base/How-do-I-troubleshoot-missing-custom-metrics-or-extensions/ta-p/28695#Configuring%20an%20Extension). Please make sure that the right metricPrefix is chosen based on your machine agent deployment, otherwise this could lead to metrics not being visible in the controller.
-###config.yml
+
+### config.yml
 1. Configure the Elasticsearch server in the `servers` section. This is done by configuring `displayName`(required), `uri`(required), `username`, `password` or `encryptedPassword`. The `uri` only consists of the `http:\\{host}:{port}`, do not configure the complete cat endpoint here.
 2. Next step is setting the `catEndpoints`. All the `servers` will share this configuration. To define a cat API you have to provide the following -
     * __endpoint__ - `/_cat/{cat api name}`. For example to fetch metrics from cat health API, endpoint will be `/_cat/health?v`. Please refer to elasticsearch documents for [API conventions](https://www.elastic.co/guide/en/elasticsearch/reference/6.6/api-conventions.html) and list of [CAT APIs](https://www.elastic.co/guide/en/elasticsearch/reference/6.6/cat.html).
@@ -39,7 +41,7 @@ Configure the extension by editing the config.yml file in `<MachineAgentHome>/mo
              49          98   3    0.47 N8sjO48
              53          98   3    0.47 NwL3LHB
    ```
-   * __metrics__ - Configure `name` and `properties`. `name` should match the column header in the response returned by the `endpoint`. `properties` include [metric qualifier](https://docs.appdynamics.com/display/PRO45/Build+a+Monitoring+Extension+Using+Java) and [metrics transforms](https://community.appdynamics.com/t5/Knowledge-Base/Extensions-Commons-Library-Metric-Transformers/ta-p/35413).
+   * __metrics__ - Configure `name` and `properties`. `name` should match the column header in the response returned by the `endpoint`. `properties` include [metric qualifier](https://docs.appdynamics.com/display/latest/Build+a+Monitoring+Extension+Using+Java) and [metrics transforms](https://community.appdynamics.com/t5/Knowledge-Base/Extensions-Commons-Library-Metric-Transformers/ta-p/35413).
 ### numberOfThreads
 Use the following formula for calculating `numberOfThreads`
 ```
@@ -48,8 +50,6 @@ numberOfThreads = number of servers *(1 + cat endpoints configured)
 for example if there are 7 cat endpoints for one server then numberOfThreads = 1 * (1 + 7) = 8
 ### metricPathReplacements
 Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/Metric-Path-CharSequence-Replacements-in-Extensions/ta-p/35412) page to get detailed instructions on configuring Metric Path Character sequence replacements in Extensions.
-### customDashboard
-Please visit [this](https://community.appdynamics.com/t5/Knowledge-Base/Uploading-Dashboards-Automatically-with-AppDynamics-Extensions/ta-p/35408) page to get detailed instructions on automatic dashboard upload with extension.
 
 ## Metrics
 Number Statistics exposed through CAT APIs
@@ -84,7 +84,8 @@ Always feel free to fork and contribute any changes directly via [GitHub](https:
 |          Name            |  Version   |
 |--------------------------|------------|
 |Extension Version         |3.0.1       |
-|Controller Compatibility  |4.5 or Later|
-|Machine Agent Version     |4.5.13+     |
 |Product Tested on         |6.6.2      |
 |Last Update               |15/01/2021  |
+|Changes list              |[ChangeLog](https://github.com/Appdynamics/elasticsearch-monitoring-extension/blob/master/CHANGES.md)|
+
+**Note**: While extensions are maintained and supported by customers under the open-source licensing model, they interact with agents and Controllers that are subject to [AppDynamics’ maintenance and support policy](https://docs.appdynamics.com/latest/en/product-and-release-announcements/maintenance-support-for-software-versions). Some extensions have been tested with AppDynamics 4.5.13+ artifacts, but you are strongly recommended against using versions that are no longer supported.
