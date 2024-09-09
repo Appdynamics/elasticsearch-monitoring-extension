@@ -8,3 +8,7 @@
 
 ### Version 3.0.1
 * Upgrading to Commons 2.2.4
+
+### Version 3.0.2
+* Upgrading commons to 2.2.13
+* Upgrading JUnit to 4.13.2
